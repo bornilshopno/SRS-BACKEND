@@ -8,7 +8,7 @@ import connectDB from "./config/db.js";
 
 
 // Connect to MongoDB
-connectDB();
+await connectDB();
 
 const PORT = process.env.PORT || 5000;
 

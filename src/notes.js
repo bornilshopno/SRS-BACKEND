@@ -32,3 +32,13 @@ res.cookie("jwt", token, {
 });
 
 res.json({ message: "Login successful", token });
+
+
+        app.get('api/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const currentUser = await userCollection.findOne(query);
+           
+            console.log(currentUser)
+            res.send(currentUser);
+        })

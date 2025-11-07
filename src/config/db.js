@@ -1,9 +1,6 @@
 import { MongoClient } from "mongodb";
 
 const uri = process.env.MONGO_URI;
-// const port=process.env.PORT
-// console.log("MONGO_URI:", uri, port);
-
 let client;
 
 async function connectDB() {
@@ -15,6 +12,12 @@ async function connectDB() {
     console.error("❌ MongoDB connection failed:", error.message);
     process.exit(1);
   }
+}
+
+// helper to get db instance anywhere
+export async function getDB() {
+  if (!client) throw new Error("MongoDB client not initialized");
+  return client.db("srsDB");
 }
 
 export default connectDB;
