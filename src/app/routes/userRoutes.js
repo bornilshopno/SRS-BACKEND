@@ -1,12 +1,15 @@
 import express from "express";
-import { registerUser, loginUser, fetchUserByEmail } from "../controllers/userController.js";
+import multer from "multer";
+import { registerUser, loginUser, fetchUserByEmail, uploadUserFile } from "../controllers/userController.js";
 
 const router = express.Router();
+const upload = multer({ dest: "uploads/" });
 //done
 router.post("/register", registerUser);
 // GET /api/users/:email//done
 router.get("/:email", fetchUserByEmail);
-
+// POST /api/users/upload/:email
+router.post("/upload/:email", upload.single("file"), uploadUserFile);
 
 router.post("/login", loginUser);
 

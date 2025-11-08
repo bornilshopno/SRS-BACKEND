@@ -1,4 +1,4 @@
-import { createUser, findUserByEmail, verifyUser } from "../services/userService.js";
+import { createUser, findUserByEmail, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
 import generateToken from "../../utils/generateToken.js";
 
 
@@ -44,6 +44,26 @@ export const fetchUserByEmail = async (req, res) => {
   }
 };
 
+
+export async function uploadUserFile(req, res) {
+  try {
+    console.log(req.file)
+    const email = req.params.email;
+    const filePath = req.file.path;
+
+    const result = await uploadFileAndSaveToUser(filePath, email);
+
+    res.status(200).json({
+      message: "File uploaded and saved successfully",
+      url: result.url,
+    });
+  } catch (error) {
+    console.error("❌ Upload failed:", error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+//not checked
 
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
