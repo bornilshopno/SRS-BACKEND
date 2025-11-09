@@ -46,6 +46,30 @@ export async function uploadFileAndSaveToUser(filePath, email) {
   }
 }
 
+export const updateUserPersonalService = async (email, updatedDoc) => {
+  const userCollection = await getCollection("users");
+  const filter = { email };
+  const updatedDocument = {
+    $set: { ...updatedDoc },
+  };
+  console.log("from service", updatedDocument)
+  const result = await userCollection.updateOne(filter, updatedDocument);
+  return result;
+};
+
+export const updateUserResidenceService = async (email, updatedDoc) => {
+  const userCollection = await getCollection("users");
+  const filter = { email };
+  const updatedDocument = {
+     $set: { residentialHistory: updatedDoc }
+  }
+  console.log("from SERVICE",updatedDocument)
+  const result = await userCollection.updateOne(filter, updatedDocument);
+  return result;
+}
+
+
+
 // not used yet
 export async function verifyUser(email, password) {
   // Normally you'd fetch and compare from DB

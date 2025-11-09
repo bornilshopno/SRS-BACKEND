@@ -1,4 +1,4 @@
-import { createUser, findUserByEmail, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
+import { createUser, findUserByEmail, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
 import generateToken from "../../utils/generateToken.js";
 
 
@@ -63,6 +63,33 @@ export async function uploadUserFile(req, res) {
   }
 }
 
+
+export const updateUserPersonalInfo = async (req, res) => {
+  try {
+    const email = req.params.email;
+    const updatedDoc = req.body;
+    console.log("Controller", updatedDoc)
+    const result = await updateUserPersonalService(email, updatedDoc);
+
+    res.status(200).send(result);
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).send({ message: "Failed to update user", error });
+  }
+};
+
+
+export const updateUserResidenceInfo=async(req,res)=>{
+try {
+  const email=req.params.email;
+  const updatedDoc=req.body;
+  const result=await updateUserResidenceService(email,updatedDoc)
+} catch (error) {
+      console.error("Error updating user:", error);
+    res.status(500).send({ message: "Failed to update user", error });
+}
+
+}
 //not checked
 
 export const loginUser = async (req, res) => {
