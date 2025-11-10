@@ -20,9 +20,9 @@ export async function getUserByEmail(email) {
   return user;
 }
 
-export async function uploadFileAndSaveToUser(filePath, email) {
+export async function uploadFileAndSaveToUser(filePath,filekey, email) {
   const userCollection = await getCollection("users");
-
+console.log("fromService, fileKey")
   try {
     // 1️⃣ Upload to Cloudinary
     const result = await cloudinary.uploader.upload(filePath, {
@@ -32,7 +32,7 @@ export async function uploadFileAndSaveToUser(filePath, email) {
     // 2️⃣ Save the Cloudinary URL to this user's document
     const updateResult = await userCollection.updateOne(
       { email },
-      { $set: { profileImage: result.secure_url } } // You can rename field as you like
+      { $set: { [filekey]: result.secure_url } } // You can rename field as you like
     );
 
     if (updateResult.matchedCount === 0) {

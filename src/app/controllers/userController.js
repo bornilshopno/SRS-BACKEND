@@ -50,8 +50,9 @@ export async function uploadUserFile(req, res) {
     console.log(req.file)
     const email = req.params.email;
     const filePath = req.file.path;
-
-    const result = await uploadFileAndSaveToUser(filePath, email);
+const fileKey=req.body.docKey 
+console.log("from Controller fileKey",fileKey)
+    const result = await uploadFileAndSaveToUser(filePath,fileKey, email);
 
     res.status(200).json({
       message: "File uploaded and saved successfully",
