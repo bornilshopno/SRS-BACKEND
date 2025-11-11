@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import userRoutes from "./app/routes/userRoutes.js";
+import termsRoutes from "./app/routes/termsRoutes.js";
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(cookieParser());
 
 // Routes
 app.use("/api/users", userRoutes);
+app.use("/api/terms", termsRoutes);
 
 app.get("/", (req, res) => {
   res.send("Server is running...");
