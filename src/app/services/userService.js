@@ -19,6 +19,12 @@ export async function getUserByEmail(email) {
   const user = await userCollection.findOne(query);
   return user;
 }
+export async function getAllUsers() {
+  const userCollection = await getCollection("users");
+  const user = await userCollection.find().toArray();
+  console.log("from service", user)
+  return user;
+}
 
 export async function uploadFileAndSaveToUser(filePath,filekey, email) {
   const userCollection = await getCollection("users");

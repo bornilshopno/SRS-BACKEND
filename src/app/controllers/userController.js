@@ -1,5 +1,6 @@
-import { createUser, findUserByEmail, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
+import { createUser, findUserByEmail, getAllUsers, getUserByEmail, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
 import generateToken from "../../utils/generateToken.js";
+
 
 
 //check done
@@ -26,7 +27,6 @@ export const registerUser = async (req, res) => {
   }
 };
 
-import { getUserByEmail } from "../services/userService.js";
 //check done
 export const fetchUserByEmail = async (req, res) => {
   try {
@@ -43,6 +43,18 @@ export const fetchUserByEmail = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+// getAllUsers
+export const fetchAllUsers=async(req,res)=>{
+  console.log("controller")
+try {
+    const allUsers= await getAllUsers()
+    console.log("controller", allUsers)
+    res.status(200).json(allUsers);
+} catch (error) {
+  res.status(500).json({ message: "Server error in fetching", error: error.message })
+}
+}
 
 
 export async function uploadUserFile(req, res) {
