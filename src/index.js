@@ -24,9 +24,9 @@ app.get("/", (req, res) => {
   res.send("✅ Server is running on Render!");
 });
 
-// Catch-all for invalid routes
-app.use("*", (req, res) => {
-  res.status(404).json({ message: "API route not found" });
-});
+// // ✅ for a catch-all route
+// app.all("*", (req, res) => {
+//   res.status(404).json({ message: "API route not found" });
+// });
 
 export default app;
