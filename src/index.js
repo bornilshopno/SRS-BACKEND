@@ -7,20 +7,25 @@ import termsRoutes from "./app/routes/termsRoutes.js";
 const app = express();
 
 // Middleware
-// app.use(cors({
-//   origin: process.env.CLIENT_URL || "http://localhost:5173",
-//   credentials: true,
-// }));
 
-app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? process.env.CLIENT_URL   // Production URL from env
-        : "http://localhost:5173", // Dev URL
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  credentials: true,
+}));
+
+
+// http://localhost:5173
+// https://srsmanagement.netlify.app
+
+// app.use(
+//   cors({
+//     origin:
+//       process.env.NODE_ENV === "production"
+//         ? process.env.CLIENT_URL   // Production URL from env
+//         : "http://localhost:5173", // Dev URL
+//     credentials: true,
+//   })
+// );
 
 
 app.use(express.json());

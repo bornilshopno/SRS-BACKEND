@@ -1,4 +1,4 @@
-import { createUser, findUserByEmail, getAllUsers, getUserByEmail, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
+import { createUser, findUserByEmail, getAllUsers, getUserByEmail, getUserById, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
 import generateToken from "../../utils/generateToken.js";
 
 
@@ -43,18 +43,35 @@ export const fetchUserByEmail = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+export const fetchUserById = async (req, res) => {
+  try {
+    const id = req.params.id;
+    console.log("id", id)
+    const user = await getUserById(id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 
 // getAllUsers
-export const fetchAllUsers=async(req,res)=>{
-  console.log("controller")
-try {
-    const allUsers= await getAllUsers()
-    console.log("controller", allUsers)
-    res.status(200).json(allUsers);
-} catch (error) {
-  res.status(500).json({ message: "Server error in fetching", error: error.message })
-}
-}
+export const fetchAllUsers = async (req, res) => {
+  try {
+    const { search = "", sortBy, role, fromDate, toDate } = req.query;
+
+    const users = await getAllUsers({ search, sortBy, role, fromDate, toDate });
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 
 
 export async function uploadUserFile(req, res) {

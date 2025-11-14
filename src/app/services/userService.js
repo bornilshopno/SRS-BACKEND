@@ -1,3 +1,4 @@
+import { ObjectId } from "mongodb";
 import cloudinary from "../../config/cloudinaryConfig.js";
 import { getCollection } from "../../utils/getCollection.js";
 
@@ -19,12 +20,44 @@ export async function getUserByEmail(email) {
   const user = await userCollection.findOne(query);
   return user;
 }
-export async function getAllUsers() {
+
+export async function getUserById(id) {
   const userCollection = await getCollection("users");
-  const user = await userCollection.find().toArray();
-  console.log("from service", user)
+  const query = { _id : new ObjectId(id) };
+  const user = await userCollection.findOne(query);
   return user;
 }
+
+export async function getAllUsers({ search, sortBy, role, fromDate, toDate }) {
+  const userCollection = await getCollection("users");
+
+  let query = {
+    $or: [
+      { name: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+      { phone: { $regex: search, $options: "i" } },
+    ]
+  };
+
+  // Role filter
+  if (role) query.role = role;
+
+  // Date range filter for submittedAt field. if field changes then replace it
+  if (fromDate && toDate) {
+    query.submitteddAt = {
+      $gte: new Date(fromDate),
+      $lte: new Date(toDate),
+    };
+  }
+
+  let cursor = userCollection.find(query);
+
+  // Sorting
+  if (sortBy) cursor = cursor.sort({ [sortBy]: 1 });
+
+  return await cursor.toArray();
+}
+
 
 export async function uploadFileAndSaveToUser(filePath,filekey, email) {
   const userCollection = await getCollection("users");
