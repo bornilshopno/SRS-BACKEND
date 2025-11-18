@@ -107,6 +107,60 @@ export const updateUserResidenceService = async (email, updatedDoc) => {
   return result;
 }
 
+//tree
+export const createEmployeeService = async ({
+  name,
+  email,
+  initialKey,
+  phone,
+  role,
+}) => {
+  let userRecord;
+
+  try {
+    // 1. Create Firebase Auth user (only email + password required)
+    userRecord = await firebaseAuth.createUser({
+      email: email.toLowerCase().trim(),
+      password: initialKey,
+    });
+
+    // 2. Save to MongoDB (raw driver — no Mongoose)
+    const userCollection =await getCollection("users");
+
+    const result = await userCollection.insertOne({
+      uid: userRecord.uid,
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      phone: phone?.trim() || "",
+      role,
+      createdAt: new Date(),
+    });
+
+    // Success — return only what frontend needs
+    return {
+      uid: userRecord.uid,
+      email: userRecord.email,
+      role,
+      mongoId: result.insertedId.toString(),
+    };
+
+  } catch (error) {
+    console.error("createEmployeeService error:", error.message || error);
+
+    // Optional cleanup: delete Firebase user if MongoDB failed
+    if (userRecord?.uid && !error.code?.includes("email-already-exists")) {
+      try {
+        await firebaseAuth.deleteUser(userRecord.uid);
+        console.log("Cleaned up orphaned Firebase user:", userRecord.uid);
+      } catch (cleanupError) {
+        console.error("Cleanup failed:", cleanupError.message);
+      }
+    }
+
+    throw error; // let controller send proper error message
+  }
+};
+
 
 
 // not used yet

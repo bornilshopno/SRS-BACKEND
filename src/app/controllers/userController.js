@@ -1,6 +1,6 @@
 import { createUser, findUserByEmail, getAllUsers, getUserByEmail, getUserById, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
 import generateToken from "../../utils/generateToken.js";
-
+import { createEmployeeService } from "../services/userService.js";
 
 
 //check done
@@ -64,7 +64,7 @@ export const fetchUserById = async (req, res) => {
 export const fetchAllUsers = async (req, res) => {
   try {
     const { search = "", sortBy, role, fromDate, toDate } = req.query;
-
+console.log("reached controller" , "role", role)
     const users = await getAllUsers({ search, sortBy, role, fromDate, toDate });
     res.status(200).json(users);
   } catch (error) {
@@ -120,6 +120,74 @@ try {
 }
 
 }
+
+
+// app/controllers/userController.js//woriking tested 18/11
+
+export const createEmployee = async (req, res) => {
+  const { name, email, initialKey, phone, role } = req.body;
+// console.log( "from createEmployee", req.body) 
+  // Validation
+  if ( !email || !initialKey || !role) {
+    return res.status(400).json({
+      success: false,
+      message: "Email, initial password, and role are required",
+    });
+  }
+
+  if (initialKey.length < 6) {
+    return res.status(400).json({
+      success: false,
+      message: "Initial password must be at least 6 characters",
+    });
+  }
+
+
+
+  try {
+    const result = await createEmployeeService({
+      name: name.trim() || "",
+      email: email.toLowerCase().trim(),
+      initialKey,
+      phone: phone?.trim() || "",
+      role,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Employee created successfully",
+      data: {
+        uid: result.uid,
+        email: result.email,
+        role: result.role,
+      },
+    });
+  } catch (error) {
+    console.error("Create employee error:", error.message || error);
+
+    if (error.code?.startsWith("auth/")) {
+      const msg =
+        error.code === "auth/email-already-exists"
+          ? "This email is already registered"
+          : error.code === "auth/invalid-email"
+          ? "Invalid email address"
+          : "Password too weak or Firebase error";
+
+      return res.status(400).json({ success: false, message: msg });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error — please try again",
+    });
+  }
+};
+
+
+
+
+
+
 //not checked
 
 export const loginUser = async (req, res) => {
