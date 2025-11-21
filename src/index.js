@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import userRoutes from "./app/routes/userRoutes.js";
 import termsRoutes from "./app/routes/termsRoutes.js";
+import activityRoutes from "./app/routes/activityRoutes.js";
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use(cookieParser());
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/terms", termsRoutes);
+app.use("/api/activity", activityRoutes);
 
 // Root route
 app.get("/", (req, res) => {
