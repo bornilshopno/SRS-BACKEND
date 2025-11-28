@@ -23,7 +23,7 @@ export async function getUserByEmail(email) {
 
 export async function getUserById(id) {
   const userCollection = await getCollection("users");
-  const query = { _id : new ObjectId(id) };
+  const query = { _id: new ObjectId(id) };
   const user = await userCollection.findOne(query);
   return user;
 }
@@ -59,9 +59,9 @@ export async function getAllUsers({ search, sortBy, role, fromDate, toDate }) {
 }
 
 
-export async function uploadFileAndSaveToUser(filePath,filekey, email) {
+export async function uploadFileAndSaveToUser(filePath, filekey, email) {
   const userCollection = await getCollection("users");
-console.log("fromService, fileKey")
+  console.log("fromService, fileKey")
   try {
     // 1️⃣ Upload to Cloudinary
     const result = await cloudinary.uploader.upload(filePath, {
@@ -100,9 +100,9 @@ export const updateUserResidenceService = async (email, updatedDoc) => {
   const userCollection = await getCollection("users");
   const filter = { email };
   const updatedDocument = {
-     $set: { residentialHistory: updatedDoc }
+    $set: { residentialHistory: updatedDoc }
   }
-  console.log("from SERVICE",updatedDocument)
+  console.log("from SERVICE", updatedDocument)
   const result = await userCollection.updateOne(filter, updatedDocument);
   return result;
 }
@@ -125,7 +125,7 @@ export const createEmployeeService = async ({
     });
 
     // 2. Save to MongoDB (raw driver — no Mongoose)
-    const userCollection =await getCollection("users");
+    const userCollection = await getCollection("users");
 
     const result = await userCollection.insertOne({
       uid: userRecord.uid,
@@ -159,6 +159,23 @@ export const createEmployeeService = async ({
 
     throw error; // let controller send proper error message
   }
+};
+
+export const checkAdminStatus = async (email) => {
+  const query = { email };
+  const userCollection = await getCollection("users");
+  const user = await userCollection.findOne(query);
+console.log(user.role, "admin role")
+  // Return true only if user exists and role is exactly "admin"
+  return user?.role === 'superAdmin';
+};
+
+export const checkSrsUser = async (email) => {
+  const query = { email };
+  const userCollection = await getCollection("users");
+  const user = await userCollection.findOne(query);
+  const allowedRoles = ["siteManager", "payrollManager", "fleetManager", "superAdmin"];
+  return user != null && allowedRoles.includes(user.role);
 };
 
 

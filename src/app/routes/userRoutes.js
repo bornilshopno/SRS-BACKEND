@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { registerUser, loginUser, fetchUserByEmail, uploadUserFile, updateUserPersonalInfo, updateUserResidenceInfo, fetchAllUsers, fetchUserById, createEmployee, } from "../controllers/userController.js";
+import { registerUser, loginUser, fetchUserByEmail, uploadUserFile, updateUserPersonalInfo, updateUserResidenceInfo, fetchAllUsers, fetchUserById, createEmployee, isAdmin, isSrsUser, } from "../controllers/userController.js";
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
@@ -20,6 +20,14 @@ router.patch("/userResidence/:email", updateUserResidenceInfo);
 router.get("/", fetchAllUsers);
 // router.post("/create-employee", verifyAdminOrSiteManager, createEmployee);
 router.post("/employees", createEmployee)
+// GET /api/users/admin/:email  → Check if a user is admin
+router.get('/admin/:email', isAdmin);
+// GET /api/users/admin/:email  → Check if a user is SRS user
+router.get('/srs/:email', isSrsUser);
+
+
+
+
 router.post("/login", loginUser);
 
 export default router;

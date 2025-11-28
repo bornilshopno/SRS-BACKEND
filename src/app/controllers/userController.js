@@ -1,4 +1,4 @@
-import { createUser, findUserByEmail, getAllUsers, getUserByEmail, getUserById, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
+import { checkAdminStatus, checkSrsUser, createUser, findUserByEmail, getAllUsers, getUserByEmail, getUserById, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
 import generateToken from "../../utils/generateToken.js";
 import { createEmployeeService } from "../services/userService.js";
 import { logActivity } from "../services/activityService.js";
@@ -244,7 +244,29 @@ export const createEmployee = async (req, res) => {
 };
 
 
+export const isAdmin = async (req, res) => {
+    try {
+        const  email  = req.params.email; 
 
+        const admin = await checkAdminStatus(email);
+
+        console.log({ admin }); 
+        res.send({ admin });
+    } catch (error) {
+        console.error('Error in isAdmin controller:', error);
+        res.status(500).send({ error: 'Internal server error' });
+    }
+};
+export const isSrsUser = async (req, res) => {
+    try {
+        const  email  = req.params.email; 
+        const srs = await checkSrsUser(email); 
+        res.send({srs});
+    } catch (error) {
+        console.error('Error in isAdmin controller:', error);
+        res.status(500).send({ error: 'Internal server error' });
+    }
+};
 
 
 
