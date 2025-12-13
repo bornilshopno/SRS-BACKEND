@@ -61,7 +61,7 @@ export const getActivities = async (req, res) => {
             },
             { $sort: { updatedAt: -1 } } // optional: newest first
         ]).toArray();
-        console.log(result)
+        // console.log(result)
 
         return result
 

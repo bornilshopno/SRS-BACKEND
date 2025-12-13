@@ -233,7 +233,7 @@ export const createEmployee = async (req, res) => {
             ? "Invalid email address"
             : "Password too weak or Firebase error";
 
-      return res.status(400).json({ success: false, message: msg });
+      return res.status(400).json({ success: false, message: msg || error.message });
     }
 
     return res.status(500).json({

@@ -107,7 +107,7 @@ export const updateUserResidenceService = async (email, updatedDoc) => {
   return result;
 }
 
-//tree
+
 export const createEmployeeService = async ({
   name,
   email,
@@ -126,13 +126,14 @@ export const createEmployeeService = async ({
 
     // 2. Save to MongoDB (raw driver — no Mongoose)
     const userCollection = await getCollection("users");
-
+    console.log("from create driver", initialKey)
     const result = await userCollection.insertOne({
       uid: userRecord.uid,
       name: name.trim(),
       email: email.toLowerCase().trim(),
       phone: phone?.trim() || "",
       role,
+      initialKey,
       createdAt: new Date(),
     });
 
@@ -165,7 +166,7 @@ export const checkAdminStatus = async (email) => {
   const query = { email };
   const userCollection = await getCollection("users");
   const user = await userCollection.findOne(query);
-console.log(user.role, "admin role")
+  console.log(user.role, "admin role")
   // Return true only if user exists and role is exactly "admin"
   return user?.role === 'superAdmin';
 };
@@ -175,6 +176,7 @@ export const checkSrsUser = async (email) => {
   const userCollection = await getCollection("users");
   const user = await userCollection.findOne(query);
   const allowedRoles = ["siteManager", "payrollManager", "fleetManager", "superAdmin"];
+  console.log(user?.role)
   return user != null && allowedRoles.includes(user.role);
 };
 

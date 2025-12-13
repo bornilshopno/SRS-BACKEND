@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import userRoutes from "./app/routes/userRoutes.js";
 import termsRoutes from "./app/routes/termsRoutes.js";
 import activityRoutes from "./app/routes/activityRoutes.js";
+import routingRoutes from "./app/routes/routingRoutes.js";
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use(cookieParser());
 app.use("/api/users", userRoutes);
 app.use("/api/terms", termsRoutes);
 app.use("/api/activity", activityRoutes);
+app.use("/api/routings", routingRoutes);
 
 // Root route
 app.get("/", (req, res) => {
