@@ -5,6 +5,7 @@ import userRoutes from "./app/routes/userRoutes.js";
 import termsRoutes from "./app/routes/termsRoutes.js";
 import activityRoutes from "./app/routes/activityRoutes.js";
 import routingRoutes from "./app/routes/routingRoutes.js";
+import payrunRoutes from "./app/routes/payrunRoutes.js";
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/terms", termsRoutes);
 app.use("/api/activity", activityRoutes);
 app.use("/api/routings", routingRoutes);
+app.use("/api/payruns", payrunRoutes);
 
 // Root route
 app.get("/", (req, res) => {

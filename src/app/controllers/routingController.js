@@ -3,7 +3,8 @@ import {
   createWeekService,
   getWeekService,
   updateSiteInWeekService,
-  copyWeekService
+  copyWeekService,
+  siteSubmitService
 } from "../services/routingService.js";
 import {
   copySiteOnlyService
@@ -159,3 +160,27 @@ export async function copySiteOnlyController(req, res) {
     return res.status(500).json({ message: "Server error", error });
   }
 }
+
+//siteSubmitController
+
+export const siteSubmitController = async (req, res) => {
+  const { year, week, site } = req.params;
+  const update = req.body.isSubmitted;
+
+  const result = await siteSubmitService(
+    Number(year),
+    Number(week),
+    update
+  )
+
+      if (!result) {
+      return res.status(404).json({
+        message: "Site not found for this week"
+      });
+    }
+
+    return res.json(result);
+
+}
+
+

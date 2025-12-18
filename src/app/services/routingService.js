@@ -1,5 +1,5 @@
 // routingService.js
-import { ObjectId } from "mongodb";
+
 
 import { getCollection } from "../../utils/getCollection.js";
 import getDatesOfISOWeek from "../../utils/weekHelper.js";
@@ -16,7 +16,7 @@ async function getThisCollection() {
 export async function createWeekService(payload) {
   const col = await getThisCollection();
 
-  const { year, week, site, dates } = payload;
+  const { year, week, site, dates, isPayRunSubmitted } = payload;
 
   // Check if the week exists
   const yearNum = Number(year);
@@ -28,7 +28,7 @@ export async function createWeekService(payload) {
     const newDoc = {
       year: yearNum,
       week: weekNum,
-      sites: [{ site, dates }]
+      sites: [{ site, dates, isPayRunSubmitted }]
     };
     const result = await col.insertOne(newDoc);
     return { createdNewWeek: true, _id: result.insertedId, ...newDoc };
@@ -40,7 +40,7 @@ export async function createWeekService(payload) {
   if (siteExists) {
     const updated = await col.findOneAndUpdate(
       { year: yearNum, week: weekNum, "sites.site": site },
-      { $set: { "sites.$.dates": dates } },
+      { $set: { "sites.$.dates": dates, "sites.$.isPayRunSubmitted":isPayRunSubmitted } },
       { returnDocument: "after" }
     );
 
@@ -56,7 +56,7 @@ export async function createWeekService(payload) {
   // Week exists but site does NOT exist → push new site
   await col.updateOne(
     { year: yearNum, week: weekNum },
-    { $push: { sites: { site, dates } } }
+    { $push: { sites: { site, dates,isPayRunSubmitted} } }
   );
 
   return {
@@ -373,4 +373,22 @@ export async function copySiteOnlyService(params) {
     week: Number(toWeek),
     dates: responseDates
   };
+}
+
+
+/* --------------------------------------------------
+   UPDATE WEEK (submit specific site data)
+-----------------------------------------------------*/
+export async function siteSubmitService(year,week,site,update){
+const col= await getThisCollection();
+
+const result= await col.updateOne(
+   { year, week, "sites.site": site },
+  {
+    $set: {
+      "sites.$.isSubmitted": update ,
+    },
+  }
+);
+return result
 }

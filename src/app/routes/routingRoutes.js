@@ -5,7 +5,8 @@ import {
   getWeek,
   updateSite,
   copyWeek,
-  copySiteOnlyController
+  copySiteOnlyController,
+  siteSubmitController
 } from "../controllers/routingController.js";
 
 const router = express.Router();
@@ -42,5 +43,6 @@ router.post("/copy", copyWeek);
 // copy only one site's allocations
 router.post("/copy-site", copySiteOnlyController);
 
+router.patch("/submit/:year/:week/:site", siteSubmitController )
 
 export default router;
