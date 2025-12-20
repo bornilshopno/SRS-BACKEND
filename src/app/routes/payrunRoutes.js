@@ -1,5 +1,5 @@
 import express from "express";
-import { createWeeklyPayrunController, getWeeklyPayrunController } from "../controllers/payrunController.js";
+import { createWeeklyPayrunController, getWeeklyPayrunController, updateWeeklyPayrunController } from "../controllers/payrunController.js";
 
 const router=express.Router()
 
@@ -11,5 +11,8 @@ router.post("/weeklyPayrun",createWeeklyPayrunController)
 
 //GET "api/payruns/weeklyPayrun"
 router.get("/weeklyPayrun",getWeeklyPayrunController)
+
+//GET "api/payruns/weeklyPayrun"
+router.put("/weeklyPayrun/update",updateWeeklyPayrunController)
 
 export default router;

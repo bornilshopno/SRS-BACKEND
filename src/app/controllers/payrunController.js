@@ -1,4 +1,4 @@
-import { createWeeklyPayrunService, getWeeklyPayrunService } from "../services/payrunService.js"
+import { createWeeklyPayrunService, getWeeklyPayrunService, updateWeeklyPayrunService } from "../services/payrunService.js"
 
 
 
@@ -37,5 +37,23 @@ export const getWeeklyPayrunController = async (req, res) => {
         console.error('getWeeklyPayrun error:', err);
         return res.status(500).json({ message: "Server error" });
     }
+
+}
+
+/* --------------------------------------------------
+   Update Weekly Payrun
+-----------------------------------------------------*/
+
+export const updateWeeklyPayrunController= async(req,res)=> {
+
+    try {
+        console.log("body payrun", req.body)
+        const result = await updateWeeklyPayrunService(req.body)
+        return res.status(200).json(result);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+
+
 
 }

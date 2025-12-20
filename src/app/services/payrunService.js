@@ -15,6 +15,7 @@ export async function createWeeklyPayrunService(payload) {
 
   const { year, week, driverWiseTrips } = payload;
 
+  console.log("driverWiseTrips", driverWiseTrips)
   const yearNum = Number(year);
   const weekNum = Number(week);
 
@@ -61,7 +62,7 @@ export async function createWeeklyPayrunService(payload) {
   };
 }
 /* --------------------------------------------------
-   CREATE or UPDATE Weekly Payrun
+   GET Weekly Payrun
 -----------------------------------------------------*/
 export async function getWeeklyPayrunService(year, week) {
 
@@ -73,13 +74,74 @@ export async function getWeeklyPayrunService(year, week) {
       week: Number(week)
     };
 
-    const payrunData=await collection.findOne(query)
-    if(!payrunData) return []
+    const payrunData = await collection.findOne(query)
+    if (!payrunData) return []
     return payrunData
   }
 
-const fullPayRunData=await collection.find().toArray()
-return fullPayRunData
+  const fullPayRunData = await collection.find().toArray()
+  return fullPayRunData
 
- 
+  
+
+}
+
+/* --------------------------------------------------
+   Update Weekly Payrun
+-----------------------------------------------------*/
+
+// export async function updateWeeklyPayrunService(payload) {
+//   const collection = await getThisCollection();
+//   const { year, week, payrunTrips } = payload;
+
+//   const yearNum = Number(year);
+//   const weekNum = Number(week);
+
+
+//   const payrun = await collection.findOne({ year: yearNum, week: weekNum });
+//   const updatedTrips= payrun.driverWiseWeeklyTrips || {}
+
+// for (const driverId in payrunTrips ){
+//   updatedTrips[driverId]= payrunTrips[driverId]
+// }
+
+// const result = await collection.findOneAndUpdate(
+//      { year: yearNum, week: weekNum },
+//     { $set: { driverWiseWeeklyTrips: updatedTrips } },
+//     { returnDocument: "after" }
+// )
+
+//   return {
+//     updatedPayrun: true,
+//     week: weekNum,
+//     year: yearNum,
+//     weekData: updatedTrips,
+//   }
+// }
+
+export async function updateWeeklyPayrunService(payload) {
+  const collection = await getThisCollection();
+  const { year, week, payrunTrips } = payload;
+
+  const yearNum = Number(year);
+  const weekNum = Number(week);
+
+  const updateDoc = {};
+
+  for (const driverId in payrunTrips) {
+    updateDoc[`driverWiseWeeklyTrips.${driverId}`] = payrunTrips[driverId];
+  }
+
+  const result = await collection.findOneAndUpdate(
+    { year: yearNum, week: weekNum },
+    { $set: updateDoc },
+    { returnDocument: "after" }
+  );
+
+  return {
+    updatedPayrun: true,
+    week: weekNum,
+    year: yearNum,
+    weekData: result.value?.driverWiseWeeklyTrips,
+  };
 }
