@@ -1,4 +1,4 @@
-import { createAdjustment } from "../services/adjustmentService,js";
+import { createAdjustment } from "../services/adjustmentService.js";
 
 
 

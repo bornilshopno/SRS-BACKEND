@@ -11,7 +11,7 @@ async function getThisCollection() {
 -----------------------------------------------------*/
 export async function createLoanService(payload) {
     const collection = await getThisCollection();
-const data={...payload,history:[],loanCreatedAt:Date.now() }
+const data={...payload,createdAt:Date.now() }
     const result = await collection.insertOne(data);
     console.log(result)
     return {insertedId:result.insertedId, createdLoan: data, success:true}
