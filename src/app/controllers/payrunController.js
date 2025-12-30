@@ -24,6 +24,7 @@ export const getWeeklyPayrunController = async (req, res) => {
 
     try {
         const { year, week} = req.query;
+   
 
         const doc = await getWeeklyPayrunService(year, week);
 

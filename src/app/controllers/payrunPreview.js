@@ -154,6 +154,23 @@ export async function payrunPreview(req, res) {
             0
         );
 
+
+         /* -----------------------------
+           4️⃣ for summarising adjustments
+        --------------------------------*/
+        const ctpInstallments = ctpAdjustments.map(c => {
+            const scheduled = Math.min(c.installmentAmount, c.remaining);
+
+            return {
+                source: "CTP",
+                refId: c._id,
+                baseInstallment: c.installmentAmount,
+                paid: scheduled
+            };
+        });
+
+        const totalAdjusted= [...ctpInstallments,...deductions]
+
         /* -----------------------------
            6️⃣ Response (PREVIEW ONLY)
         --------------------------------*/
@@ -167,6 +184,7 @@ export async function payrunPreview(req, res) {
                 totalScheduledDeductions,
                 totalDeducted,
                 netPayment,
+                totalAdjusted,
                 deductions,
                 adjustmentFound: adjustments,
                 loansFound: loans,
@@ -182,3 +200,55 @@ export async function payrunPreview(req, res) {
         });
     }
 }
+
+
+// [
+//     {
+//         "source": "LOAN",
+//         "refId": "694d8a44d4fdce4079d6f04f",
+//         "baseInstallment": 200,
+//         "scheduled": 200,
+//         "paid": 200,
+//         "carryForward": 0
+//     },
+//     {
+//         "source": "LOAN",
+//         "refId": "694d8a72d4fdce4079d6f050",
+//         "baseInstallment": 20,
+//         "scheduled": 20,
+//         "paid": 20,
+//         "carryForward": 0
+//     },
+//     {
+//         "source": "LOAN",
+//         "refId": "694d8a8cd4fdce4079d6f051",
+//         "baseInstallment": 133,
+//         "scheduled": 133,
+//         "paid": 133,
+//         "carryForward": 0
+//     },
+//     {
+//         "source": "PENALTY",
+//         "refId": "694d8aa4d4fdce4079d6f052",
+//         "baseInstallment": 140,
+//         "scheduled": 140,
+//         "paid": 140,
+//         "carryForward": 0
+//     },
+//     {
+//         "source": "PENALTY",
+//         "refId": "694d8ae0d4fdce4079d6f053",
+//         "baseInstallment": 110,
+//         "scheduled": 110,
+//         "paid": 110,
+//         "carryForward": 0
+//     },
+//     {
+//         "source": "PENALTY",
+//         "refId": "694d8b00d4fdce4079d6f055",
+//         "baseInstallment": 100,
+//         "scheduled": 100,
+//         "paid": 100,
+//         "carryForward": 0
+//     }
+// ]

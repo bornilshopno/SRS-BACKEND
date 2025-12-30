@@ -69,6 +69,7 @@ export async function getWeeklyPayrunService(year, week) {
 
   const collection = await getThisCollection();
 
+
   if (year && week) {
     const query = {
       year: Number(year),
@@ -76,6 +77,7 @@ export async function getWeeklyPayrunService(year, week) {
     };
 
     const payrunData = await collection.findOne(query)
+    console.log("payrunGet", year, week, payrunData)
     if (!payrunData) return []
     return payrunData
   }
@@ -83,7 +85,7 @@ export async function getWeeklyPayrunService(year, week) {
   const fullPayRunData = await collection.find().toArray()
   return fullPayRunData
 
-  
+
 
 }
 
