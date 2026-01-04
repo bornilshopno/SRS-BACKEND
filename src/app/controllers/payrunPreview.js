@@ -90,7 +90,8 @@ export async function payrunPreview(req, res) {
                 source: "LOAN",
                 refId: l._id,
                 baseInstallment: l.installmentAmount,
-                scheduled
+                scheduled,
+                 direction:l.direction,
             };
         });
 
@@ -101,7 +102,8 @@ export async function payrunPreview(req, res) {
                 source: a.type, // DBS | PENALTY
                 refId: a._id,
                 baseInstallment: a.installmentAmount,
-                scheduled
+                scheduled,
+                 direction:a.direction,
             };
         });
 
@@ -165,7 +167,8 @@ export async function payrunPreview(req, res) {
                 source: "CTP",
                 refId: c._id,
                 baseInstallment: c.installmentAmount,
-                paid: scheduled
+                paid: scheduled,
+                direction:c.direction,
             };
         });
 

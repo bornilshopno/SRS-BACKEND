@@ -1,4 +1,4 @@
-import { checkAdminStatus, checkSrsUser, createUser, findUserByEmail, getAllUsers, getUserByEmail, getUserById, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
+import { checkAdminStatus, checkDuplicateAccount, checkSrsUser, createUser, findUserByEmail, getAllUsers, getUserByEmail, getUserById, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
 import generateToken from "../../utils/generateToken.js";
 import { createEmployeeService } from "../services/userService.js";
 import { logActivity } from "../services/activityService.js";
@@ -269,6 +269,17 @@ export const isSrsUser = async (req, res) => {
 };
 
 
+export const checkDuplicateAccountController=async(req, res)=>{
+  console.log("checking")
+  try {
+      const { bankAccountNumber, excludeDriverId } = req.query;
+      const result=await checkDuplicateAccount(bankAccountNumber,excludeDriverId)
+      res.status(200).send(result)
+  } catch (error) {
+       console.error('Error in checking accoung:', error);
+        res.status(500).send({ error:{message: 'Internal check error'} });
+  }
+}
 
 //not checked
 

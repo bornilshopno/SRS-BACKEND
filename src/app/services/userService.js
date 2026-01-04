@@ -180,6 +180,26 @@ export const checkSrsUser = async (email) => {
   return user != null && allowedRoles.includes(user.role);
 };
 
+export const checkDuplicateAccount = async (bankAccountNumber, excludeDriverId) => {
+  if (!bankAccountNumber) {
+    return ({ success: false });
+  }
+
+  const userCollection = await getCollection("users");
+
+  const query = {
+    bankAccountNumber,
+    _id: { $ne: excludeDriverId } // exclude current driver
+  };
+
+  const exists = await userCollection.findOne(query);
+
+ return({
+    success: true,
+    isDuplicate: !!exists,
+  });
+}
+
 
 
 // not used yet
