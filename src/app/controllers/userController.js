@@ -1,4 +1,4 @@
-import { checkAdminStatus, checkDuplicateAccount, checkSrsUser, createUser, findUserByEmail, getAllUsers, getUserByEmail, getUserById, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
+import { checkAdminStatus, checkDuplicateAccount, checkSrsUser, createUser, deleteEmployeeService, findUserByEmail, getAllUsers, getUserByEmail, getUserById, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
 import generateToken from "../../utils/generateToken.js";
 import { createEmployeeService } from "../services/userService.js";
 import { logActivity } from "../services/activityService.js";
@@ -27,6 +27,8 @@ export const registerUser = async (req, res) => {
     res.status(500).json({ error: "Failed to register user" });
   }
 };
+
+
 
 //check done
 export const fetchUserByEmail = async (req, res) => {
@@ -140,7 +142,7 @@ export const updateUserPersonalInfo = async (req, res) => {
     // Step 2: ONLY log activity if update was successful AND activityDoc exists
     if (activityDoc) {
       try {
- 
+
         await logActivity(activityDoc);
         console.log("Activity logged successfully");
       } catch (logError) {
@@ -244,40 +246,75 @@ export const createEmployee = async (req, res) => {
 };
 
 
-export const isAdmin = async (req, res) => {
-    try {
-        const  email  = req.params.email; 
+//deleteUser
 
-        const admin = await checkAdminStatus(email);
+export const deleteEmployee = async (req, res) => {
+  console.log("DELETE", req.params)
+  try {
+    const { email } = req.params;
 
-        console.log({ admin }); 
-        res.send({ admin });
-    } catch (error) {
-        console.error('Error in isAdmin controller:', error);
-        res.status(500).send({ error: 'Internal server error' });
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
     }
+
+    const result = await deleteEmployeeService(email);
+
+    res.status(200).json({
+      success:true,
+      message: "User deleted from Firebase and database",
+      ...result,
+    });
+
+  } catch (error) {
+    if (error.code === "auth/user-not-found") {
+      return res.status(404).json({
+        message: "User not found in Firebase",
+      });
+    }
+
+    res.status(500).json({
+      message: "Failed to delete user",
+      error: error.message,
+    });
+  }
+};
+
+
+
+export const isAdmin = async (req, res) => {
+  try {
+    const email = req.params.email;
+
+    const admin = await checkAdminStatus(email);
+
+    console.log({ admin });
+    res.send({ admin });
+  } catch (error) {
+    console.error('Error in isAdmin controller:', error);
+    res.status(500).send({ error: 'Internal server error' });
+  }
 };
 export const isSrsUser = async (req, res) => {
-    try {
-        const  email  = req.params.email; 
-        const srs = await checkSrsUser(email); 
-        res.send({srs});
-    } catch (error) {
-        console.error('Error in isAdmin controller:', error);
-        res.status(500).send({ error: 'Internal server error' });
-    }
+  try {
+    const email = req.params.email;
+    const srs = await checkSrsUser(email);
+    res.send({ srs });
+  } catch (error) {
+    console.error('Error in isAdmin controller:', error);
+    res.status(500).send({ error: 'Internal server error' });
+  }
 };
 
 
-export const checkDuplicateAccountController=async(req, res)=>{
+export const checkDuplicateAccountController = async (req, res) => {
   console.log("checking")
   try {
-      const { bankAccountNumber, excludeDriverId } = req.query;
-      const result=await checkDuplicateAccount(bankAccountNumber,excludeDriverId)
-      res.status(200).send(result)
+    const { bankAccountNumber, excludeDriverId } = req.query;
+    const result = await checkDuplicateAccount(bankAccountNumber, excludeDriverId)
+    res.status(200).send(result)
   } catch (error) {
-       console.error('Error in checking accoung:', error);
-        res.status(500).send({ error:{message: 'Internal check error'} });
+    console.error('Error in checking accoung:', error);
+    res.status(500).send({ error: { message: 'Internal check error' } });
   }
 }
 

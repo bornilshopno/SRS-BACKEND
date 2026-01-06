@@ -162,6 +162,35 @@ export const createEmployeeService = async ({
   }
 };
 
+
+
+export const deleteEmployeeService = async (email) => {
+  try {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // 1️⃣ Get Firebase user by email
+    const firebaseUser = await firebaseAuth.getUserByEmail(normalizedEmail);
+
+    // 2️⃣ Delete Firebase Auth user FIRST
+    await firebaseAuth.deleteUser(firebaseUser.uid);
+
+    // 3️⃣ Delete user profile from MongoDB
+    const userCollection = await getCollection("users");
+    const deleteResult = await userCollection.deleteOne({
+      email: normalizedEmail,
+    });
+
+    return {
+      deletedFirebaseUid: firebaseUser.uid,
+      deletedFromDb: deleteResult.deletedCount === 1,
+    };
+
+  } catch (error) {
+    console.error("deleteEmployeeService error:", error.message || error);
+    throw error;
+  }
+};
+
 export const checkAdminStatus = async (email) => {
   const query = { email };
   const userCollection = await getCollection("users");

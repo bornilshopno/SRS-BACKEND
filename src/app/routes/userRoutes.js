@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { registerUser, loginUser, fetchUserByEmail, uploadUserFile, updateUserPersonalInfo, updateUserResidenceInfo, fetchAllUsers, fetchUserById, createEmployee, isAdmin, isSrsUser, checkDuplicateAccountController, } from "../controllers/userController.js";
+import { registerUser, loginUser, fetchUserByEmail, uploadUserFile, updateUserPersonalInfo, updateUserResidenceInfo, fetchAllUsers, fetchUserById, createEmployee, isAdmin, isSrsUser, checkDuplicateAccountController, deleteEmployee, } from "../controllers/userController.js";
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
@@ -27,7 +27,8 @@ router.get('/srs/:email', isSrsUser);
 // GET /api/users/check-bank-account
 // query: ?bankAccountNumber=12345678&excludeDriverId=abc123
 router.get('/check/bank-account', checkDuplicateAccountController)
-
+// DELETE /api/users/:email//done
+router.delete("/:email", deleteEmployee);
 
 
 
