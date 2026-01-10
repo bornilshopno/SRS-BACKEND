@@ -77,7 +77,7 @@ export async function getWeeklyPayrunService(year, week) {
     };
 
     const payrunData = await collection.findOne(query)
-    console.log("payrunGet", year, week, payrunData)
+    // console.log("payrunGet", year, week)
     if (!payrunData) return []
     return payrunData
   }

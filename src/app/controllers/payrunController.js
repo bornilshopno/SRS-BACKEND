@@ -48,7 +48,7 @@ export const getWeeklyPayrunController = async (req, res) => {
 export const updateWeeklyPayrunController= async(req,res)=> {
 
     try {
-        console.log("body payrun", req.body)
+        // console.log("body payrun", req.body)
         const result = await updateWeeklyPayrunService(req.body)
         return res.status(200).json(result);
     } catch (error) {

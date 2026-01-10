@@ -6,7 +6,7 @@ export async function payrunPreview(req, res) {
         const adjustmentsCollection = await getCollection("adjustments");
 
         const { driverId, weeklyTotal, vatAmount, year, week } = req.body;
-        console.log("req.body", req.body)
+        // console.log("req.body", req.body)
         /* -----------------------------
            1️⃣ Fetch applicable adjustments
         --------------------------------*/
