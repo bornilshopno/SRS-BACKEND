@@ -40,21 +40,21 @@ export const processInvoices = async (invoices = []) => {
 
       await sendInvoiceEmail({
         to: invoice.email,
-        subject: `Invoice ${invoice.invoiceNumber}`,
-        html: `<p>Dear ${invoice.customerName},</p><p>Please find your invoice attached.</p>`,
+        subject: `Invoice ${invoice.driverId}`,
+        html: `<p>Dear Concern,</p><p>Please find your invoice attached.</p>`,
         pdfBuffer,
-        filename: `invoice-${invoice.invoiceNumber}.pdf`
+        filename: `invoice-${invoice.driverId}.pdf`
       })
 
       results.sent++
       results.details.push({
-        invoiceNumber: invoice.invoiceNumber,
+        invoiceNumber: invoice.driverId,
         status: 'sent'
       })
     } catch (error) {
       results.failed++
       results.details.push({
-        invoiceNumber: invoice?.invoiceNumber,
+        invoiceNumber: invoice?.driverId,
         status: 'failed',
         error: error.message
       })
@@ -84,6 +84,8 @@ console.log("InvoiceServiceCreate",driverWiseInvoiceData)
 console.log("InvoiceServiceCreate", "no doc invoice updated")
     const payrunResult= updatePayrunInvoiceStatus(driverWiseInvoiceData, week, year)
 console.log("InvoiceServiceCreate", "no Doc payrun result")
+   const mailResult= await processInvoices(driverWiseInvoiceData)
+console.log("InvoiceServiceCreate", "no Doc mail result", mailResult)
     return {
       createdInvoice: true,
       _id: result.insertedId,
@@ -123,6 +125,9 @@ console.log("mergedInvoie")
 //payRunUpdate
    const payrunResult= updatePayrunInvoiceStatus(driverWiseInvoiceData, week, year)
    console.log("payrun updated from invoice service")
+
+   const mailResult=await processInvoices(mergedInvoices)
+
   return {
     updatedInvoice: true,
     week: weekNum,

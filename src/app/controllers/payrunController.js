@@ -1,4 +1,5 @@
-import { createWeeklyPayrunService, getWeeklyPayrunService, updateWeeklyPayrunService } from "../services/payrunService.js"
+import { logActivity } from "../services/activityService.js"
+import { createWeeklyPayrunService, getWeeklyPayrunService, updateHoldStatus, updateWeeklyPayrunService } from "../services/payrunService.js"
 
 
 
@@ -54,7 +55,31 @@ export const updateWeeklyPayrunController= async(req,res)=> {
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
+}
+
+/* --------------------------------------------------
+   Update Hold Status DriverWise
+-----------------------------------------------------*/
+
+export const controlHoldStatus= async(req,res)=> {
+
+    try {
+        const {activityDoc, ...holdDoc}=req.body
+        const result = await updateHoldStatus(holdDoc)
 
 
-
+           // Step 2: ONLY log activity if update was successful AND activityDoc exists
+            if (activityDoc) {
+              try {        
+                await logActivity(activityDoc);
+                console.log("Activity logged successfully");
+              } catch (logError) {
+                console.error("Failed to log activity (but user was updated):", logError);
+                // We don't fail the whole request just because logging failed
+              }
+            }
+        return res.status(200).json(result);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
 }

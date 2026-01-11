@@ -30,19 +30,24 @@ export const generateInvoicePdf = (invoice) => {
       doc.moveDown()
 
       doc.fontSize(12)
-      doc.text(`Invoice Number: ${invoice.invoiceNumber}`)
-      doc.text(`Customer: ${invoice.customerName}`)
+      doc.text(`Invoice Number: ${invoice.driverId}`)
+      // doc.text(`Customer: ${invoice.customerName}`)
       doc.text(`Email: ${invoice.email}`)
       doc.moveDown()
 
       doc.text('Items:')
       doc.moveDown(0.5)
 
-      invoice.items.forEach((item, index) => {
-        doc.text(
-          `${index + 1}. ${item.name} - ${item.quantity} x ${item.price} = ${item.quantity * item.price}`
-        )
-      })
+      doc.text(`Earning from Trip s: ${invoice.earnings.weeklyTotal}`, {align: 'right'})
+      doc.text(`Vat Amount: ${invoice.earnings.vatAmount}`)
+      doc.text(`CT Bill: ${invoice.earnings.ctpPayment}`)
+      doc.text(`Total Payment(Earning+Vat+CT): ${invoice.summary.totalEarnings}`, {align: 'right'})
+      doc.text(`Liability Scheduled: ${invoice.summary.totalScheduledDeductions}`)
+      doc.text(`Liability Balanced: ${invoice.summary.totalDeducted}`)
+      doc.text(`Liability Carried to Next Week: ${invoice.summary.totalCarryForward}`)
+      doc.text(`Net Payable: ${invoice.summary.netPayment}`, {align: 'right'})
+
+
 
       doc.moveDown()
       doc.fontSize(14).text(`Total Amount: ${invoice.totalAmount}`, {
