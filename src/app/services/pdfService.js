@@ -50,7 +50,7 @@ export const generateInvoicePdf = (invoice) => {
 
 
       doc.moveDown()
-      doc.fontSize(14).text(`Total Amount: ${invoice.totalAmount}`, {
+      doc.fontSize(14).text(`Total Amount: ${invoice.summary.netPayment}`, {
         align: 'right'
       })
 
