@@ -40,21 +40,21 @@ export const processInvoices = async (invoices = []) => {
 
       await sendInvoiceEmail({
         to: invoice.email,
-        subject: `Invoice ${invoice.driverId}`,
+        subject: `Invoice ${invoice.reference}`,
         html: `<p>Dear Concern,</p><p>Please find your invoice attached.</p>`,
         pdfBuffer,
-        filename: `invoice-${invoice.driverId}.pdf`
+        filename: `invoice-${invoice.reference}.pdf`
       })
 
       results.sent++
       results.details.push({
-        invoiceNumber: invoice.driverId,
+        invoiceNumber: invoice.reference,
         status: 'sent'
       })
     } catch (error) {
       results.failed++
       results.details.push({
-        invoiceNumber: invoice?.driverId,
+        invoiceNumber: invoice?.reference,
         status: 'failed',
         error: error.message
       })

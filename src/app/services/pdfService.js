@@ -30,7 +30,7 @@ export const generateInvoicePdf = (invoice) => {
       doc.moveDown()
 
       doc.fontSize(12)
-      doc.text(`Invoice Number: ${invoice.driverId}`)
+      doc.text(`Invoice Number: ${invoice.reference}`)
       // doc.text(`Customer: ${invoice.customerName}`)
       doc.text(`Email: ${invoice.email}`)
       doc.moveDown()
