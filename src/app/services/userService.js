@@ -205,7 +205,7 @@ export const checkSrsUser = async (email) => {
   const userCollection = await getCollection("users");
   const user = await userCollection.findOne(query);
   const allowedRoles = ["siteManager", "payrollManager", "fleetManager", "superAdmin"];
-  console.log(user?.role)
+  console.log("from userService",user?.role)
   return user != null && allowedRoles.includes(user.role);
 };
 

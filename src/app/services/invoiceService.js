@@ -3,8 +3,8 @@
 import { getCollection } from '../../utils/getCollection.js';
 import { sendInvoiceEmail } from './emailService.js'
 import { updatePayrunInvoiceStatus } from './invoiceAdjustments.js';
-import { generateInvoicePdf } from './pdfService.js'
-
+import { generateInvoicePdf } from './updatedPdfService.js'
+import { ObjectId } from "mongodb";
 
 async function getTheCollection() {
   return await getCollection("invoices");
@@ -137,23 +137,123 @@ console.log("mergedInvoie")
   };
 }
 
-export const generateWeeklyInvoice=async(year, week)=>{
-const collection = await getTheCollection();
+// export const generateWeeklyInvoice=async(year, week)=>{
+// const collection = await getTheCollection();
+
+//   if (year && week) {
+//     const query = {
+//       year: Number(year),
+//       week: Number(week)
+//     };
+
+//     const invoices = await collection.findOne(query)
+//     // console.log("payrunGet", year, week)
+//     if (!invoices) return []
+//     return invoices
+//   }
+
+//   const fullInvoiceData = await collection.find().toArray()
+//   return fullInvoiceData
+
+// }
 
 
+
+export const generateWeeklyInvoice = async (year, week) => {
+  const collection = await getTheCollection();
+
+  const pipeline = [];
+
+  // ✅ optional match
   if (year && week) {
-    const query = {
-      year: Number(year),
-      week: Number(week)
-    };
-
-    const invoices = await collection.findOne(query)
-    // console.log("payrunGet", year, week)
-    if (!invoices) return []
-    return invoices
+    pipeline.push({
+      $match: {
+        year: Number(year),
+        week: Number(week),
+      },
+    });
   }
 
-  const fullInvoiceData = await collection.find().toArray()
-  return fullInvoiceData
+  pipeline.push(
+    // 1️⃣ lookup users
+    {
+      $lookup: {
+        from: "users",
+        let: {
+          driverIds: {
+            $map: {
+              input: "$driverWiseInvoiceData",
+              as: "d",
+              in: { $toObjectId: "$$d.driverId" }, // 🔥 FIX
+            },
+          },
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $in: ["$_id", "$$driverIds"],
+              },
+            },
+          },
+          {
+            $project: {
+              site: 1,
+            },
+          },
+        ],
+        as: "drivers",
+      },
+    },
 
-}
+    // 2️⃣ inject site into array
+    {
+      $addFields: {
+        driverWiseInvoiceData: {
+          $map: {
+            input: "$driverWiseInvoiceData",
+            as: "d",
+            in: {
+              $mergeObjects: [
+                "$$d",
+                {
+                  site: {
+                    $let: {
+                      vars: {
+                        matchedDriver: {
+                          $first: {
+                            $filter: {
+                              input: "$drivers",
+                              as: "u",
+                              cond: {
+                                $eq: [
+                                  "$$u._id",
+                                  { $toObjectId: "$$d.driverId" }, // 🔥 FIX
+                                ],
+                              },
+                            },
+                          },
+                        },
+                      },
+                      in: "$$matchedDriver.site",
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
+
+    // 3️⃣ cleanup
+    {
+      $project: {
+        drivers: 0,
+      },
+    }
+  );
+
+  const invoices = await collection.aggregate(pipeline).toArray();
+  return invoices.length ? invoices : [];
+};
