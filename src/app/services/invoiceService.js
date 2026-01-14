@@ -3,11 +3,15 @@
 import { getCollection } from '../../utils/getCollection.js';
 import { sendInvoiceEmail } from './emailService.js'
 import { updatePayrunInvoiceStatus } from './invoiceAdjustments.js';
-import { generateInvoicePdf } from './updatedPdfService.js'
+import { generateInvoicePdf } from './pdfService.js'
 import { ObjectId } from "mongodb";
 
-async function getTheCollection() {
+async function getInvoiceCollection() {
   return await getCollection("invoices");
+}
+
+async function getDriverCollection() {
+  return await getCollection("users");
 }
 /**
  * Process and send invoices
@@ -29,19 +33,23 @@ export const processInvoices = async (invoices = []) => {
 
   for (const invoice of invoices) {
     try {
-      // REQUIRED FIELDS EXPECTED IN invoice
-      // invoice.email
-      // invoice.invoiceNumber
-      // invoice.customerName
-      // invoice.items
-      // invoice.totalAmount
 
-      const pdfBuffer = await generateInvoicePdf(invoice)
+      const driverCollection = await getDriverCollection();
+      const driverInfo = await driverCollection.findOne({ _id: new ObjectId(invoice.driverId) });
+      const driver={
+        name: driverInfo.name,
+        niNumber:driverInfo.nationalInsuranceNumber,
+        address:driverInfo.address,
+        vatNumber:driverInfo.vatNumber,
+      }
+      
+
+      const pdfBuffer = await generateInvoicePdf({...invoice, ...driver})
 
       await sendInvoiceEmail({
         to: invoice.email,
         subject: `Invoice ${invoice.reference}`,
-        html: `<p>Dear Concern,</p><p>Please find your invoice attached.</p>`,
+        html: `<p>Dear ${driver.name},</p><p>Please find your invoice attached.</p>`,
         pdfBuffer,
         filename: `invoice-${invoice.reference}.pdf`
       })
@@ -65,10 +73,10 @@ export const processInvoices = async (invoices = []) => {
 }
 
 export const createInvoiceData = async (week, year, driverWiseInvoiceData) => {
-  const collection = await getTheCollection();
+  const collection = await getInvoiceCollection();
   const yearNum = Number(year);
   const weekNum = Number(week);
-console.log("InvoiceServiceCreate",driverWiseInvoiceData)
+  console.log("InvoiceServiceCreate", driverWiseInvoiceData)
   // 1️⃣ Check if week document exists
   const doc = await collection.findOne({ year: yearNum, week: weekNum });
 
@@ -77,15 +85,15 @@ console.log("InvoiceServiceCreate",driverWiseInvoiceData)
     const newDoc = {
       year: yearNum,
       week: weekNum,
-      driverWiseInvoiceData, 
+      driverWiseInvoiceData,
     };
 
     const result = await collection.insertOne(newDoc);
-console.log("InvoiceServiceCreate", "no doc invoice updated")
-    const payrunResult= updatePayrunInvoiceStatus(driverWiseInvoiceData, week, year)
-console.log("InvoiceServiceCreate", "no Doc payrun result")
-   const mailResult= await processInvoices(driverWiseInvoiceData)
-console.log("InvoiceServiceCreate", "no Doc mail result", mailResult)
+    console.log("InvoiceServiceCreate", "no doc invoice updated")
+    const payrunResult = updatePayrunInvoiceStatus(driverWiseInvoiceData, week, year)
+    console.log("InvoiceServiceCreate", "no Doc payrun result")
+    const mailResult = await processInvoices(driverWiseInvoiceData)
+    console.log("InvoiceServiceCreate", "no Doc mail result", mailResult)
     return {
       createdInvoice: true,
       _id: result.insertedId,
@@ -95,25 +103,25 @@ console.log("InvoiceServiceCreate", "no Doc mail result", mailResult)
   }
 
   // 3️⃣ Merge into existing 
-const existingInvoices = doc.driverWiseInvoiceData || [];
-console.log("exisitng Invoices")
-/* Create a map using driverId */
-const invoiceMap = new Map();
+  const existingInvoices = doc.driverWiseInvoiceData || [];
+  console.log("exisitng Invoices")
+  /* Create a map using driverId */
+  const invoiceMap = new Map();
 
-/* Add existing invoices first */
-for (const inv of existingInvoices) {
-  invoiceMap.set(inv.driverId.toString(), inv);
-}
+  /* Add existing invoices first */
+  for (const inv of existingInvoices) {
+    invoiceMap.set(inv.driverId.toString(), inv);
+  }
 
-/* Override / add incoming invoices */
-for (const inv of driverWiseInvoiceData) {
-  invoiceMap.set(inv.driverId.toString(), inv);
-}
+  /* Override / add incoming invoices */
+  for (const inv of driverWiseInvoiceData) {
+    invoiceMap.set(inv.driverId.toString(), inv);
+  }
 
-/* Final merged array */
-const mergedInvoices = Array.from(invoiceMap.values());
+  /* Final merged array */
+  const mergedInvoices = Array.from(invoiceMap.values());
 
-console.log("mergedInvoie")
+  console.log("mergedInvoie")
 
   // 4️⃣ Persist merged data
   await collection.findOneAndUpdate(
@@ -122,11 +130,12 @@ console.log("mergedInvoie")
     { returnDocument: "after" }
   );
 
-//payRunUpdate
-   const payrunResult= updatePayrunInvoiceStatus(driverWiseInvoiceData, week, year)
-   console.log("payrun updated from invoice service")
+  //payRunUpdate
+  const payrunResult = updatePayrunInvoiceStatus(driverWiseInvoiceData, week, year)
+  console.log("payrun updated from MERGE invoice service")
 
-   const mailResult=await processInvoices(mergedInvoices)
+  const mailResult = await processInvoices(mergedInvoices)
+    console.log("MERGE mail result", mailResult)
 
   return {
     updatedInvoice: true,
@@ -138,7 +147,7 @@ console.log("mergedInvoie")
 }
 
 // export const generateWeeklyInvoice=async(year, week)=>{
-// const collection = await getTheCollection();
+// const collection = await getInvoiceCollection();
 
 //   if (year && week) {
 //     const query = {
@@ -160,7 +169,7 @@ console.log("mergedInvoie")
 
 
 export const generateWeeklyInvoice = async (year, week) => {
-  const collection = await getTheCollection();
+  const collection = await getInvoiceCollection();
 
   const pipeline = [];
 
