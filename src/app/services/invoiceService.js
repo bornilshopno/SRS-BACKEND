@@ -193,7 +193,7 @@ export const generateWeeklyInvoice = async (year, week) => {
             $map: {
               input: "$driverWiseInvoiceData",
               as: "d",
-              in: { $toObjectId: "$$d.driverId" }, // 🔥 FIX
+              in: { $toObjectId: "$$d.driverId" },
             },
           },
         },
@@ -208,6 +208,9 @@ export const generateWeeklyInvoice = async (year, week) => {
           {
             $project: {
               site: 1,
+              srsDriverNumber: 1,
+              name: 1,
+              profileImage:1
             },
           },
         ],
@@ -215,7 +218,7 @@ export const generateWeeklyInvoice = async (year, week) => {
       },
     },
 
-    // 2️⃣ inject site into array
+    // 2️⃣ inject user fields into driverWiseInvoiceData
     {
       $addFields: {
         driverWiseInvoiceData: {
@@ -226,25 +229,28 @@ export const generateWeeklyInvoice = async (year, week) => {
               $mergeObjects: [
                 "$$d",
                 {
-                  site: {
-                    $let: {
-                      vars: {
-                        matchedDriver: {
-                          $first: {
-                            $filter: {
-                              input: "$drivers",
-                              as: "u",
-                              cond: {
-                                $eq: [
-                                  "$$u._id",
-                                  { $toObjectId: "$$d.driverId" }, // 🔥 FIX
-                                ],
-                              },
+                  $let: {
+                    vars: {
+                      matchedDriver: {
+                        $first: {
+                          $filter: {
+                            input: "$drivers",
+                            as: "u",
+                            cond: {
+                              $eq: [
+                                "$$u._id",
+                                { $toObjectId: "$$d.driverId" },
+                              ],
                             },
                           },
                         },
                       },
-                      in: "$$matchedDriver.site",
+                    },
+                    in: {
+                      site: "$$matchedDriver.site",
+                      srsDriverNumber: "$$matchedDriver.srsDriverNumber",
+                      name: "$$matchedDriver.name",
+                      profileImage: "$$matchedDriver.profileImage",
                     },
                   },
                 },

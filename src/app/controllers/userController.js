@@ -187,7 +187,7 @@ export const updateUserResidenceInfo = async (req, res) => {
 // app/controllers/userController.js//woriking tested 18/11
 
 export const createEmployee = async (req, res) => {
-  const { name, email, initialKey, phone, role } = req.body;
+  const { name, email, initialKey, phone, role,site } = req.body;
   // console.log( "from createEmployee", req.body) 
   // Validation
   if (!email || !initialKey || !role) {
@@ -213,6 +213,7 @@ export const createEmployee = async (req, res) => {
       initialKey,
       phone: phone?.trim() || "",
       role,
+      site,
     });
 
     return res.status(201).json({

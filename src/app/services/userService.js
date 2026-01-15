@@ -113,7 +113,7 @@ export const createEmployeeService = async ({
   email,
   initialKey,
   phone,
-  role,
+  role,site,
 }) => {
   let userRecord;
 
@@ -132,7 +132,7 @@ export const createEmployeeService = async ({
       name: name.trim(),
       email: email.toLowerCase().trim(),
       phone: phone?.trim() || "",
-      role,
+      role,site,
       initialKey,
       createdAt: new Date(),
     });

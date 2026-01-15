@@ -40,8 +40,9 @@ RM3 8TD`
       doc.text(`Address: ${invoice.address}`);
       doc.text(`VAT number: ${invoice.vatNumber || "N/A"}`);
 
+      // doc.moveDown(0.5);
       drawLine(doc);
-
+      doc.moveDown();
       /* ================= TABLE ================= */
 
       const col = {
@@ -52,9 +53,25 @@ RM3 8TD`
       };
 
       const rowHeight = 22;
+      /* -------- Title -------- */
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(10)
+        .text("Service Amount Breakdown :", 50);
+      // drawLine(doc);
 
+      // doc.moveDown(0.5);
       // Header row
       const headerY = doc.y + 5;
+
+      // background
+      doc
+        .rect(50, headerY, 495, rowHeight)
+        .fill("#f3f4f6"); // gray-100
+
+      drawTableRowBorder(doc, headerY, rowHeight);
+
+      doc.fillColor("black").font("Helvetica-Bold").fontSize(8);
       drawTableRowBorder(doc, headerY, rowHeight);
 
       doc.font("Helvetica-Bold").fontSize(10);
@@ -98,7 +115,7 @@ RM3 8TD`
           { width: 240 }
         );
 
-        doc.text(`${dayTotal.toFixed(2)}£`, col.amount, rowY + 6, {
+        doc.text(`£ ${dayTotal.toFixed(2)}`, col.amount, rowY + 6, {
           align: "right",
           width: 90,
         });
@@ -107,6 +124,119 @@ RM3 8TD`
       });
 
       drawLine(doc);
+
+      //
+      /* ================= TABLE 2 : GROUPED ADJUSTMENTS ================= */
+
+      if (invoice.data?.totalAdjusted?.length) {
+        const adjustments = invoice.data.totalAdjusted;
+
+        // Group by source
+        const grouped = adjustments.reduce((acc, item) => {
+          acc[item.source] = acc[item.source] || [];
+          acc[item.source].push(item);
+          return acc;
+        }, {});
+
+        // A4 width safe columns (margin 50)
+        const col = {
+          source: 50,
+          ref: 120,
+          base: 300,
+          paid: 380,
+          carry: 450,
+        };
+
+        const rowHeight = 18;
+
+        doc.moveDown(1);
+
+        if (doc.y > doc.page.height - 200) doc.addPage();
+
+        /* -------- Title -------- */
+        doc
+          .font("Helvetica-Bold")
+          .fontSize(10)
+          .text("Adjustments Summary :", 50);
+        // drawLine(doc);
+        // doc.moveDown(0.5);
+
+        /* -------- Header (Gray Background) -------- */
+        const headerY = doc.y;
+
+        // background
+        doc
+          .rect(50, headerY, 495, rowHeight)
+          .fill("#f3f4f6"); // gray-100
+
+        drawTableRowBorder(doc, headerY, rowHeight);
+
+        doc.fillColor("black").font("Helvetica-Bold").fontSize(8);
+
+        doc.text("Source", col.source, headerY + 5);
+        doc.text("Ref ID", col.ref, headerY + 5);
+        doc.text("Base", col.base, headerY + 5, { width: 70, align: "right" });
+        doc.text("Paid", col.paid, headerY + 5, { width: 60, align: "right" });
+        doc.text("Carry Fwd", col.carry, headerY + 5, {
+          width: 80,
+          align: "right",
+        });
+
+        doc.y = headerY + rowHeight;
+        doc.font("Helvetica").fontSize(8);
+
+        /* -------- Grouped Rows -------- */
+        Object.keys(grouped).forEach((source) => {
+          if (doc.y > doc.page.height - 140) doc.addPage();
+
+          // Group label row
+          // doc
+          //   .font("Helvetica-Bold")
+          //   .fontSize(8)
+          //   .text(source, 50);
+
+          // doc.moveDown(0.2);
+          // doc.font("Helvetica");
+
+          grouped[source].forEach((adj) => {
+            if (doc.y > doc.page.height - 120) doc.addPage();
+
+            const rowY = doc.y;
+            drawTableRowBorder(doc, rowY, rowHeight);
+
+            doc.text(adj.source, col.source, rowY + 5);
+            doc.text(adj.refId || "-", col.ref, rowY + 5, { width: 160 });
+
+            doc.text(
+              `£ ${Number(adj.baseInstallment || 0).toFixed(2)}`,
+              col.base,
+              rowY + 5,
+              { width: 70, align: "right" }
+            );
+
+            doc.text(
+              `£ ${Number(adj.paid || 0).toFixed(2)}`,
+              col.paid,
+              rowY + 5,
+              { width: 60, align: "right" }
+            );
+
+            doc.text(
+              `£ ${Number(adj.carryForward || 0).toFixed(2)}`,
+              col.carry,
+              rowY + 5,
+              { width: 80, align: "right" }
+            );
+
+            doc.y = rowY + rowHeight;
+          });
+
+          // doc.moveDown(0.3);
+        });
+
+        drawLine(doc);
+      }
+
 
       /* ================= TOTALS ================= */
 
@@ -167,7 +297,7 @@ function drawTotalRow(doc, label, value, bold = false) {
   const y = doc.y;
 
   doc.text(label, 300, y);
-  doc.text(`${Number(value || 0).toFixed(2)}£`, 50, y, {
+  doc.text(`£ ${Number(value || 0).toFixed(2)}`, 50, y, {
     align: "right",
     width: 495,
   });
