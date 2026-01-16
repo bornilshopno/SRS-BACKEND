@@ -16,7 +16,7 @@ async function getThisCollection() {
 export async function createWeekService(payload) {
   const col = await getThisCollection();
 
-  const { year, week, site, dates, isPayRunSubmitted } = payload;
+  const { year, week, site, dates, isPayRunSubmitted, isSaved } = payload;
 
   // Check if the week exists
   const yearNum = Number(year);
@@ -28,7 +28,7 @@ export async function createWeekService(payload) {
     const newDoc = {
       year: yearNum,
       week: weekNum,
-      sites: [{ site, dates, isPayRunSubmitted }]
+      sites: [{ site, dates, isPayRunSubmitted,isSaved }]
     };
     const result = await col.insertOne(newDoc);
     return { createdNewWeek: true, _id: result.insertedId, ...newDoc };
@@ -40,7 +40,7 @@ export async function createWeekService(payload) {
   if (siteExists) {
     const updated = await col.findOneAndUpdate(
       { year: yearNum, week: weekNum, "sites.site": site },
-      { $set: { "sites.$.dates": dates, "sites.$.isPayRunSubmitted":isPayRunSubmitted } },
+      { $set: { "sites.$.dates": dates, "sites.$.isPayRunSubmitted":isPayRunSubmitted,"sites.$.isSaved":isSaved } },
       { returnDocument: "after" }
     );
 
@@ -56,7 +56,7 @@ export async function createWeekService(payload) {
   // Week exists but site does NOT exist → push new site
   await col.updateOne(
     { year: yearNum, week: weekNum },
-    { $push: { sites: { site, dates,isPayRunSubmitted} } }
+    { $push: { sites: { site, dates,isPayRunSubmitted, isSaved} } }
   );
 
   return {

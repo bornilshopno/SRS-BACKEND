@@ -175,7 +175,7 @@ RM3 8TD`
 
         doc.text("Source", col.source, headerY + 5);
         doc.text("Ref ID", col.ref, headerY + 5);
-        doc.text("Base", col.base, headerY + 5, { width: 70, align: "right" });
+        doc.text("Installment", col.base, headerY + 5, { width: 70, align: "right" });
         doc.text("Paid", col.paid, headerY + 5, { width: 60, align: "right" });
         doc.text("Carry Fwd", col.carry, headerY + 5, {
           width: 80,
