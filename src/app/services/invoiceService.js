@@ -36,15 +36,15 @@ export const processInvoices = async (invoices = []) => {
 
       const driverCollection = await getDriverCollection();
       const driverInfo = await driverCollection.findOne({ _id: new ObjectId(invoice.driverId) });
-      const driver={
+      const driver = {
         name: driverInfo.name,
-        niNumber:driverInfo.nationalInsuranceNumber,
-        address:driverInfo.address,
-        vatNumber:driverInfo.vatNumber,
+        niNumber: driverInfo.nationalInsuranceNumber,
+        address: driverInfo.address,
+        vatNumber: driverInfo.vatNumber,
       }
-      
 
-      const pdfBuffer = await generateInvoicePdf({...invoice, ...driver})
+
+      const pdfBuffer = await generateInvoicePdf({ ...invoice, ...driver })
 
       await sendInvoiceEmail({
         to: invoice.email,
@@ -135,7 +135,7 @@ export const createInvoiceData = async (week, year, driverWiseInvoiceData) => {
   console.log("payrun updated from MERGE invoice service")
 
   const mailResult = await processInvoices(mergedInvoices)
-    console.log("MERGE mail result", mailResult)
+  console.log("MERGE mail result", mailResult)
 
   return {
     updatedInvoice: true,
@@ -168,7 +168,7 @@ export const createInvoiceData = async (week, year, driverWiseInvoiceData) => {
 
 
 
-export const generateWeeklyInvoice = async (year, week) => {
+export const generateWeeklyInvoice = async (year, week, driverId) => {
   const collection = await getInvoiceCollection();
 
   const pipeline = [];
@@ -210,7 +210,7 @@ export const generateWeeklyInvoice = async (year, week) => {
               site: 1,
               srsDriverNumber: 1,
               name: 1,
-              profileImage:1
+              profileImage: 1
             },
           },
         ],
@@ -270,5 +270,23 @@ export const generateWeeklyInvoice = async (year, week) => {
   );
 
   const invoices = await collection.aggregate(pipeline).toArray();
+
+  if (driverId) {
+
+    const result = await invoices?.[0].driverWiseInvoiceData?.find(i => i.driverId === driverId)
+    return result ? result : {}
+
+
+  }
   return invoices.length ? invoices : [];
 };
+
+export const sendEmailbyIdYearWeek = async (payload) => {
+  const { driverId, year, week } = payload;
+  const invoice = await generateWeeklyInvoice(year, week, driverId)
+  const data =  [invoice] 
+ const result= await processInvoices(data)
+ console.log("mail",result)
+ return {mail: result}
+
+}

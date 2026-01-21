@@ -8,7 +8,7 @@ const upload = multer({ dest: "uploads/" });
 router.post("/register", registerUser);
 // GET /api/users/:email//done
 router.get("/:email", fetchUserByEmail);
-// GET /api/users/:email//done
+// GET /api/users/user/:id//done
 router.get("/user/:id", fetchUserById);
 // POST /api/users/upload/:email
 router.post("/upload/:email", upload.single("file"), uploadUserFile);

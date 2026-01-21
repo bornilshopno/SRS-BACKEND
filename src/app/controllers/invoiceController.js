@@ -1,6 +1,6 @@
 // src/controllers/sendInvoices.controller.mjs
 
-import { createInvoiceData, generateWeeklyInvoice, processInvoices } from '../services/invoiceService.js'
+import { createInvoiceData, generateWeeklyInvoice, processInvoices, sendEmailbyIdYearWeek } from '../services/invoiceService.js'
 
 export const sendInvoicesController = async (req, res) => {
   try {
@@ -28,9 +28,9 @@ export const sendInvoicesController = async (req, res) => {
 }
 
 
-export const createInvoice=async(req,res)=>{
- try {
-    const { week,year,driverWiseInvoiceData} = req.body
+export const createInvoice = async (req, res) => {
+  try {
+    const { week, year, driverWiseInvoiceData } = req.body
 
     if (!Array.isArray(driverWiseInvoiceData) || driverWiseInvoiceData.length === 0) {
       return res.status(400).json({
@@ -39,7 +39,7 @@ export const createInvoice=async(req,res)=>{
       })
     }
 
-    const result = await createInvoiceData(week,year,driverWiseInvoiceData)
+    const result = await createInvoiceData(week, year, driverWiseInvoiceData)
 
     res.status(200).json({
       success: true,
@@ -55,30 +55,30 @@ export const createInvoice=async(req,res)=>{
 }
 
 
-export const getWeeklyInvoices=async(req,res)=>{
+export const getWeeklyInvoices = async (req, res) => {
   try {
-          const { year, week} = req.query;
-     
-  
-          const doc = await generateWeeklyInvoice(year, week);
-  
-          // Just return whatever getWeekService returns
-          // → null if week doesn't exist
-          // → full doc if no site param
-          // → site-specific object if site is provided
-          return res.status(200).json(doc);  // Always 200
-  
-      } catch (err) {
-          console.error('getWeeklyInvoices:', err);
-          return res.status(500).json({ message: err?.message || "Server error" });
-      }
-  
+    const { year, week, driverId } = req.query;
+
+
+    const doc = await generateWeeklyInvoice(year, week, driverId);
+
+    // Just return whatever getWeekService returns
+    // → null if week doesn't exist
+    // → full doc if no site param
+    // → site-specific object if site is provided
+    return res.status(200).json(doc);  // Always 200
+
+  } catch (err) {
+    console.error('getWeeklyInvoices:', err);
+    return res.status(500).json({ message: err?.message || "Server error" });
+  }
+
 }
 
 
-export const sendIndividualInvoice=async(req,res)=>{
- try {
-    const {driverWiseInvoiceData} = req.body
+export const sendIndividualInvoice = async (req, res) => {
+  try {
+    const { driverWiseInvoiceData } = req.body
 
     if (!Array.isArray(driverWiseInvoiceData) || driverWiseInvoiceData.length === 0) {
       return res.status(400).json({
@@ -99,5 +99,23 @@ export const sendIndividualInvoice=async(req,res)=>{
       message: error.message
     })
   }
+
+}
+
+export const sendEmailbyIdYearWeekController = async (req, res) => {
+  try {
+    const result = await sendEmailbyIdYearWeek(req.body)
+    res.status(200).json({
+      success: true,
+      result
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+
+
 
 }
