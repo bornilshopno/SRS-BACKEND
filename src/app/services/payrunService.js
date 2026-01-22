@@ -95,23 +95,27 @@ export async function getWeeklyPayrunService(year, week) {
 
 export async function updateHoldStatus(payload) {
   const collection = await getThisCollection();
-  const { isHold,year,week,driverId } = payload;
+  const { isHold, year, week, driverId } = payload;
 
   const yearNum = Number(year);
   const weekNum = Number(week);
 
 
 
-const result = await collection.findOneAndUpdate(
-     { year: yearNum, week: weekNum,   
-      [`driverWiseWeeklyTrips.${driverId}`]: { $exists: true } },// optional safety: only update if driver already exists
-   
-    { $set: { 
-      [`driverWiseWeeklyTrips.${driverId}.isHold`]: isHold
-     } },
+  const result = await collection.findOneAndUpdate(
+    {
+      year: yearNum, week: weekNum,
+      [`driverWiseWeeklyTrips.${driverId}`]: { $exists: true }
+    },// optional safety: only update if driver already exists
+
+    {
+      $set: {
+        [`driverWiseWeeklyTrips.${driverId}.isHold`]: isHold
+      }
+    },
     { returnDocument: "after" }
-)
-console.log("result in payrun service", result)
+  )
+  console.log("result in payrun service", result)
   return {
     updatedPayrun: true,
     week: weekNum,
@@ -152,9 +156,70 @@ export async function updateWeeklyPayrunService(payload) {
   };
 }
 
+/* --------------------------------------------------
+  Patch Weekly Payrun when Invoice Revised
+-----------------------------------------------------*/
+export async function PatchWeeklyPayrunService(payload) {
+  const collection = await getThisCollection();
+
+  const { year, week, driverId, updatedWeekData } = payload;
+
+  if (!year || !week || !driverId || !Array.isArray(updatedWeekData)) {
+    return {
+      success: false,
+      status: 400,
+      message: "Invalid payload"
+    };
+  }
+
+  const updatePath = `driverWiseWeeklyTrips.${driverId}.weekData`;
+
+  try {
+    const result = await collection.updateOne(
+      { year: Number(year), week: Number(week) },
+      {
+        $set: {
+          [updatePath]: updatedWeekData,
+          [`driverWiseWeeklyTrips.${driverId}.isSaved`]: true
+        }
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return {
+        success: false,
+        status: 404,
+        message: "Payrun not found for given year/week"
+      };
+    }
+
+    if (result.modifiedCount === 0) {
+      return {
+        success: false,
+        status: 404,
+        message: "Driver not found in this payrun"
+      };
+    }
+
+    return {
+      success: true,
+      status: 200,
+      message: "Driver weekData updated successfully"
+    };
+
+  } catch (err) {
+    console.error("PatchWeeklyPayrunService error:", err);
+    return {
+      success: false,
+      status: 500,
+      message: "Internal server error",
+      error: err.message
+    };
+  }
+}
 
 
-
+///////////////////////////////////
 
 export async function paymentApply(req, res) {
   const session = client.startSession();

@@ -31,8 +31,11 @@ RM3 8TD`
       /* ================= META ================= */
 
       doc.moveDown();
+      doc.text(`Invoice No: ${invoice.reference}`);
+      doc.text(`Invoice date: ${invoice.revision ?? 0}`);
       doc.text(`Invoice date: ${formatDate(Date.now())}`);
       doc.text(`Bill pay date: ${formatDate(Date.now() + 7 * 86400000)}`);
+
 
       doc.moveDown();
       doc.font("Helvetica-Bold").text(`Name: ${invoice.name}`);
@@ -46,7 +49,7 @@ RM3 8TD`
       /* ================= TABLE ================= */
 
       const col = {
-        day: 50,
+        day: 52,
         date: 90,
         desc: 190,
         amount: 450,
@@ -57,7 +60,7 @@ RM3 8TD`
       doc
         .font("Helvetica-Bold")
         .fontSize(10)
-        .text("Service Amount Breakdown :", 50);
+        .text("Service Amount Breakdown", 50);
       // drawLine(doc);
 
       // doc.moveDown(0.5);
@@ -123,7 +126,7 @@ RM3 8TD`
         doc.y = rowY + rowHeight;
       });
 
-      drawLine(doc);
+      // drawLine(doc);
 
       //
       /* ================= TABLE 2 : GROUPED ADJUSTMENTS ================= */
@@ -140,7 +143,7 @@ RM3 8TD`
 
         // A4 width safe columns (margin 50)
         const col = {
-          source: 50,
+          source: 52,
           ref: 120,
           base: 300,
           paid: 380,
@@ -157,13 +160,13 @@ RM3 8TD`
         doc
           .font("Helvetica-Bold")
           .fontSize(10)
-          .text("Adjustments Summary :", 50);
+          .text("Adjustments Summary ", 50);
         // drawLine(doc);
         // doc.moveDown(0.5);
 
         /* -------- Header (Gray Background) -------- */
-        const headerY = doc.y;
 
+        const headerY = doc.y + 5;
         // background
         doc
           .rect(50, headerY, 495, rowHeight)
@@ -171,7 +174,7 @@ RM3 8TD`
 
         drawTableRowBorder(doc, headerY, rowHeight);
 
-        doc.fillColor("black").font("Helvetica-Bold").fontSize(8);
+        doc.fillColor("black").font("Helvetica-Bold").fontSize(10);
 
         doc.text("Source", col.source, headerY + 5);
         doc.text("Ref ID", col.ref, headerY + 5);
@@ -234,12 +237,13 @@ RM3 8TD`
           // doc.moveDown(0.3);
         });
 
-        drawLine(doc);
+        // drawLine(doc);
       }
 
 
       /* ================= TOTALS ================= */
 
+      doc.moveDown();
       doc.moveDown();
 
       drawTotalRow(doc, "Total Service Amount", invoice.earnings.weeklyTotal);
@@ -288,8 +292,19 @@ function drawLine(doc) {
   doc.moveDown(0.7);
 }
 
+//rectangle around table
+// function drawTableRowBorder(doc, y, height) {
+//   doc.rect(50, y, 495, height).stroke();
+// }
+
 function drawTableRowBorder(doc, y, height) {
-  doc.rect(50, y, 495, height).stroke();
+  const left = 50;
+  const right = 545;  // 50 + 495
+
+  doc
+    .moveTo(left, y).lineTo(right, y)
+    .moveTo(left, y + height).lineTo(right, y + height)
+    .stroke();
 }
 
 function drawTotalRow(doc, label, value, bold = false) {

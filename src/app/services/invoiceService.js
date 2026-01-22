@@ -3,6 +3,7 @@
 import { getCollection } from '../../utils/getCollection.js';
 import { sendInvoiceEmail } from './emailService.js'
 import { updatePayrunInvoiceStatus } from './invoiceAdjustments.js';
+import { PatchWeeklyPayrunService } from './payrunService.js';
 import { generateInvoicePdf } from './pdfService.js'
 import { ObjectId } from "mongodb";
 
@@ -284,9 +285,61 @@ export const generateWeeklyInvoice = async (year, week, driverId) => {
 export const sendEmailbyIdYearWeek = async (payload) => {
   const { driverId, year, week } = payload;
   const invoice = await generateWeeklyInvoice(year, week, driverId)
-  const data =  [invoice] 
- const result= await processInvoices(data)
- console.log("mail",result)
- return {mail: result}
+  const data = [invoice]
+  const result = await processInvoices(data)
+  console.log("mail", result)
+  return { mail: result }
+
+}
+
+export const patchInvoiceData = async (week, year, driverWiseInvoiceData) => {
+  const collection = await getInvoiceCollection();
+
+
+  const updatedDriver = driverWiseInvoiceData[0];
+  try {
+    const result = await collection.updateOne(
+      {
+        year,
+        week,
+        "driverWiseInvoiceData.driverId": updatedDriver.driverId
+      },
+      {
+        $set: {
+          "driverWiseInvoiceData.$": updatedDriver
+        }
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({
+        message: "Weekly invoice or driver not found"
+      });
+    }
+
+
+
+    const mailResult = await processInvoices(driverWiseInvoiceData)
+    console.log("MERGE mail result", mailResult)
+
+
+    const dataForPayrun = { week, year,driverId:updatedDriver.driverId ,updatedWeekData: driverWiseInvoiceData[0].data.weekData }
+    const payrunResult = await PatchWeeklyPayrunService(dataForPayrun)
+    return {
+      updatedInvoice: true,
+      week: week,
+      year: year,
+      updatedInvoiceData: driverWiseInvoiceData[0],
+      // payrunUpdate: payrunResult,
+      mailResult: mailResult,
+      payrunResult:payrunResult,
+    };
+  }
+  catch (err) {
+    console.error("Update weekly invoice error:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+
+
 
 }

@@ -1,6 +1,7 @@
 // src/controllers/sendInvoices.controller.mjs
 
-import { createInvoiceData, generateWeeklyInvoice, processInvoices, sendEmailbyIdYearWeek } from '../services/invoiceService.js'
+import { logActivity } from '../services/activityService.js'
+import { createInvoiceData, generateWeeklyInvoice, patchInvoiceData, processInvoices, sendEmailbyIdYearWeek } from '../services/invoiceService.js'
 
 export const sendInvoicesController = async (req, res) => {
   try {
@@ -117,5 +118,42 @@ export const sendEmailbyIdYearWeekController = async (req, res) => {
   }
 
 
+
+}
+
+export const patchWeeklyInvoice= async(req,res)=>{
+
+  const {year,week, driverWiseInvoiceData, activityDoc}=req.body
+    try {
+
+
+    if (!Array.isArray(driverWiseInvoiceData) || driverWiseInvoiceData.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invoices array is required'
+      })
+    }
+
+    const result = await patchInvoiceData(week, year, driverWiseInvoiceData)
+       if (activityDoc) {
+               try {
+                   await logActivity(activityDoc);
+                   console.log("Activity logged successfully");
+               } catch (logError) {
+                   console.error("Failed to log activity (but user was updated):", logError);
+                   // We don't fail the whole request just because logging failed
+               }
+           }
+
+    res.status(200).json({
+      success: true,
+      result
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
 
 }
