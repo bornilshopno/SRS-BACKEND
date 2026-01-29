@@ -20,7 +20,6 @@ export const updatePayrunInvoiceStatus=async(driverWiseInvoiceData, week, year)=
       { $set: setUpdates }
     );
 
-    console.log("result from invoice adjustment", setUpdates, result)
     return result
 
    

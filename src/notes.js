@@ -34,11 +34,49 @@ res.cookie("jwt", token, {
 res.json({ message: "Login successful", token });
 
 
-        app.get('api/users/:email', async (req, res) => {
-            const email = req.params.email;
-            const query = { email: email };
-            const currentUser = await userCollection.findOne(query);
-           
-            console.log(currentUser)
-            res.send(currentUser);
-        })
+app.get('api/users/:email', async (req, res) => {
+  const email = req.params.email;
+  const query = { email: email };
+  const currentUser = await userCollection.findOne(query);
+
+  console.log(currentUser)
+  res.send(currentUser);
+})
+
+invoice
+{
+  year,
+    week,
+    driverWiseInvoiceData,
+
+    adjustmentStatus: "PENDING" | "APPLIED" | "FAILED",
+      lastProcessedAt,
+}
+
+loan 
+{
+  loanAmount: 1000,
+  remaining: 900,
+
+  status: "ACTIVE",
+
+  history: [
+    {
+      invoiceId,
+      revision,
+      year,
+      week,
+
+      scheduled: 200,
+      paid: 100,
+
+      delta: -100,
+
+      previousRemaining: 1000,
+      newRemaining: 900,
+
+      createdAt
+    }
+  ]
+}
+

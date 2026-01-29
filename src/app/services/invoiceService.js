@@ -2,7 +2,7 @@
 
 import { getCollection } from '../../utils/getCollection.js';
 import { sendInvoiceEmail } from './emailService.js'
-import { updatePayrunInvoiceStatus } from './invoiceAdjustments.js';
+import { updatePayrunInvoiceStatus } from './invoice.payrun.adjustments.js';
 import { PatchWeeklyPayrunService } from './payrunService.js';
 import { generateInvoicePdf } from './pdfService.js'
 import { ObjectId } from "mongodb";
@@ -146,6 +146,53 @@ export const createInvoiceData = async (week, year, driverWiseInvoiceData) => {
     payrunUpdate: payrunResult
   };
 }
+
+
+export const createOrMergeInvoice = async (week, year, data) => {
+  const collection = await getInvoiceCollection();
+  const yearNum = Number(year);
+  const weekNum = Number(week);
+
+  const doc = await collection.findOne({ year: yearNum, week: weekNum });
+
+  if (!doc) {
+    const newDoc = {
+      year: yearNum,
+      week: weekNum,
+      driverWiseInvoiceData: data,
+      adjustmentStatus: "PENDING",
+      createdAt: Date.now()
+    };
+
+    const result = await collection.insertOne(newDoc);
+    //  console.log("invoice id" , result.insertedId)
+    return { ...newDoc, _id: result.insertedId };
+  }
+
+  const map = new Map();
+  doc.driverWiseInvoiceData.forEach(d => map.set(d.driverId, d));
+  data.forEach(d => map.set(d.driverId, d));
+
+  const mergedInvoices = [...map.values()];
+
+  await collection.updateOne(
+    { year: yearNum, week: weekNum },
+    {
+      $set: {
+        driverWiseInvoiceData: mergedInvoices,
+        adjustmentStatus: "PENDING",
+        updatedAt: Date.now()
+      }
+    }
+  );
+
+  // console.log("invoice id" , doc._id)
+
+  return {
+    ...doc,
+    driverWiseInvoiceData: mergedInvoices
+  };
+};
 
 // export const generateWeeklyInvoice=async(year, week)=>{
 // const collection = await getInvoiceCollection();
@@ -323,7 +370,7 @@ export const patchInvoiceData = async (week, year, driverWiseInvoiceData) => {
     console.log("MERGE mail result", mailResult)
 
 
-    const dataForPayrun = { week, year,driverId:updatedDriver.driverId ,updatedWeekData: driverWiseInvoiceData[0].data.weekData }
+    const dataForPayrun = { week, year, driverId: updatedDriver.driverId, updatedWeekData: driverWiseInvoiceData[0].data.weekData }
     const payrunResult = await PatchWeeklyPayrunService(dataForPayrun)
     return {
       updatedInvoice: true,
@@ -332,7 +379,7 @@ export const patchInvoiceData = async (week, year, driverWiseInvoiceData) => {
       updatedInvoiceData: driverWiseInvoiceData[0],
       // payrunUpdate: payrunResult,
       mailResult: mailResult,
-      payrunResult:payrunResult,
+      payrunResult: payrunResult,
     };
   }
   catch (err) {
@@ -343,3 +390,4 @@ export const patchInvoiceData = async (week, year, driverWiseInvoiceData) => {
 
 
 }
+

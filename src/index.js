@@ -9,6 +9,7 @@ import payrunRoutes from "./app/routes/payrunRoutes.js";
 import loanRoutes from "./app/routes/loanRoutes.js";
 import adjustmentRoutes from "./app/routes/adjustmentRoutes.js";
 import invoiceRoutes from "./app/routes/invoiceRoutes.js";
+import defaultRoutes from "./app/routes/defaultRoutes.js";
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use("/api/payruns", payrunRoutes);
 app.use("/api/adjustments", adjustmentRoutes);
 app.use("/api/loans", loanRoutes);
 app.use('/api/invoices', invoiceRoutes)
+app.use('/api/defaults', defaultRoutes)
 
 // Root route
 app.get("/", (req, res) => {

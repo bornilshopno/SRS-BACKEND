@@ -32,7 +32,7 @@ RM3 8TD`
 
       doc.moveDown();
       doc.text(`Invoice No: ${invoice.reference}`);
-      doc.text(`Invoice date: ${invoice.revision ?? 0}`);
+      doc.text(`Revision No: ${invoice.revision ?? 0}`);
       doc.text(`Invoice date: ${formatDate(Date.now())}`);
       doc.text(`Bill pay date: ${formatDate(Date.now() + 7 * 86400000)}`);
 
