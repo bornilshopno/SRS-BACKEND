@@ -1,7 +1,7 @@
 import { MongoClient } from "mongodb";
 
 const uri = process.env.MONGO_URI;
-let client;
+export let client;
 
 async function connectDB() {
   try {

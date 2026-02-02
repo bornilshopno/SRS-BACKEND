@@ -1,16 +1,17 @@
 // services/finance/installment.engine.js
-export const applyInstallments = async (
-  account,
-  adjustments
-) => {
-console.log("applyInstallments", adjustments)
+
+
+export const applyInstallments = async (account, adjustments) => {
+  account.carryForward ||= 0;
+  account.history ||= [];
 
   for (const adj of adjustments) {
+
     const old = account.history.find(
       h => h.invoiceId === adj.invoiceId
     );
 
-    // 🔁 revert
+    // 🔁 REVERT OLD ENTRY
     if (old) {
       account.remaining -= old.delta;
       account.history = account.history.filter(
@@ -18,22 +19,38 @@ console.log("applyInstallments", adjustments)
       );
     }
 
-    // ➕ apply
-    const delta = -adj.paid;
-    const prev = account.remaining;
+    // ➕ APPLY NEW ENTRY
+    const prevRemaining = account.remaining;
 
-    account.remaining += delta;
+    const paid = adj.paid;
+    const delta = -paid;
+    const carryForward = adj.carryForward;
+    let carryForwardDelta = -carryForward;
+
+    let newRemaining = prevRemaining + delta;
+
+
+
+    // 💡 handle overpayment
+    if (newRemaining < 0) {
+      carryForwardDelta = carryForwardDelta + Math.abs(newRemaining);
+      newRemaining = 0;
+    }
+
+    account.remaining = newRemaining;
+    account.carryForward = -carryForwardDelta;
 
     account.history.push({
       invoiceId: adj.invoiceId,
       revision: adj.revision,
       year: adj.year,
       week: adj.week,
-      paid: adj.paid,
+      paid,
       delta,
-      previousRemaining: prev,
-      newRemaining: account.remaining,
-      createdAt: Date.now()
+      previousRemaining: prevRemaining,
+      newRemaining,
+      carryForwardDelta,
+      invoicedAt: Date.now()
     });
   }
 

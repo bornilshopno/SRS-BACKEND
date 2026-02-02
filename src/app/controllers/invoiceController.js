@@ -174,7 +174,8 @@ export const generateInvoice = async (req, res) => {
     // console.log("from processControler", invoice._id)//working
 
     // 2️⃣ Finance-grade adjustments
-    await processInvoiceFinance(invoice._id);
+    const result = await processInvoiceFinance(invoice._id);
+    console.log("invoice controller, generate invoice", result )
 
     // 3️⃣ Payrun update (ONLY after finance success)
     await updatePayrunInvoiceStatus(driverWiseInvoiceData, week, year);//working
@@ -182,7 +183,7 @@ export const generateInvoice = async (req, res) => {
     // 4️⃣ Mail sending (ONLY after payrun)
     // await processInvoices(invoice.driverWiseInvoiceData);//mail accound suspended
     //when array coming one with it is sending all the drivers of the total invoice collection of that week. hence
-    await processInvoices(driverWiseInvoiceData);
+    // await processInvoices(driverWiseInvoiceData); //commented because mailjet problem
     res.json({ success: true });
 
   } catch (error) {

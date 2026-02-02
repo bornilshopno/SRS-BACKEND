@@ -7,6 +7,7 @@ import { withTransaction } from "../../utils/withTransaction.js";
 import { applyInstallments } from "./finance.apply.installments.js";
 import { dedupeByKey } from "../../utils/dedupeByKey.js";
 import { AdjustmentRepo } from "../../utils/adjustments.repo.js";
+import { LoanRepo } from "../../utils/loan.repo.js";
 
 
 /* ------------------ helpers ------------------ */
@@ -35,25 +36,28 @@ export const processInvoiceFinance = async (invoiceId) => {
   try {
     /* 1️⃣ Extract normalized adjustments */
     const adjustments = extractAdjustments(invoice);
-console.log("financeService", adjustments)
+// console.log("financeService", adjustments)//okay
     if (!adjustments.length) {
       await markInvoiceApplied(invoiceId);
       return;
     }
 
     /* 2️⃣ Idempotency protection */
-    const unique = dedupeByKey(
+    const uniqueAdjustments = dedupeByKey(
       adjustments,
       a => `${a.invoiceId}-${a.refId}`
     );
 
-    /* 3️⃣ Group by source */
-    const bySource = groupBy(unique, a => a.source);
+    // console.log("unique", uniqueAdjustments)//Okay
 
+    /* 3️⃣ Group by source */
+    const bySource = groupBy(uniqueAdjustments, a => a.source);
+
+    // console.log("bySource", bySource)//working
     /* 4️⃣ LOAN processing */
     if (bySource.LOAN) {
       const byLoan = groupBy(bySource.LOAN, a => a.refId);
-
+console.log("byLoadn", byLoan)
       for (const loanId in byLoan) {
         await withTransaction(async (session) => {
           const loan = await LoanRepo.findById(loanId, session);

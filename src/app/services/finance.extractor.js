@@ -15,6 +15,7 @@ export const extractAdjustments = (invoiceDoc) => {
         scheduled: adj.scheduled || 0,
         invoiceId: invoiceDoc._id.toString(),
         revision: driver.revision || 0,
+        carryForward:adj.carryForward || 0,
         year: invoiceDoc.year,
         week: invoiceDoc.week
       });
