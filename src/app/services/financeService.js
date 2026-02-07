@@ -57,7 +57,7 @@ export const processInvoiceFinance = async (invoiceId) => {
     /* 4️⃣ LOAN processing */
     if (bySource.LOAN) {
       const byLoan = groupBy(bySource.LOAN, a => a.refId);
-console.log("byLoadn", byLoan)
+// console.log("byLoadn", byLoan)//okay
       for (const loanId in byLoan) {
         await withTransaction(async (session) => {
           const loan = await LoanRepo.findById(loanId, session);

@@ -1,10 +1,27 @@
 import { getCollection } from "../../utils/getCollection.js";
 
+/* ------------------------------------------------
+   Helper Function
+-------------------------------------------------*/
+function getEffectiveInstallment(doc) {
+  const carry = Number(doc.carryForward || 0);
+  const base = Number(doc.installmentAmount || 0);
+  return base + carry;
+}
+
+function calculateTotals(adjustmentsArray) {
+  const total = adjustmentsArray.reduce(
+    (s, a) => s + Math.min(getEffectiveInstallment(a), a.remaining),
+    0
+  );
+  return total
+}
+
+
 export async function payrunPreviewFinal(req, res) {
   try {
     const loanCollection = await getCollection("loans");
     const adjustmentsCollection = await getCollection("adjustments");
-
     const { driverId, weeklyTotal, vatAmount, year, week } = req.body;
 
     /* ------------------------------------------------
@@ -63,39 +80,58 @@ export async function payrunPreviewFinal(req, res) {
     /* ------------------------------------------------
        4️⃣ Totals (for UI)
     -------------------------------------------------*/
-    const dbsTotal = dbsAdjustments.reduce(
-      (s, a) => s + Math.min(a.installmentAmount, a.remaining),
-      0
-    );
+    // const dbsTotal = dbsAdjustments.reduce(
+    //   (s, a) => s + Math.min(getEffectiveInstallment(a), a.remaining),
+    //   0
+    // );
 
-    const penaltyTotal = penaltyAdjustments.reduce(
-      (s, a) => s + Math.min(a.installmentAmount, a.remaining),
-      0
-    );
+    // const penaltyTotal = penaltyAdjustments.reduce(
+    //   (s, a) => s + Math.min(a.installmentAmount, a.remaining),
+    //   0
+    // );
 
-    const loanTotal = loans.reduce(
-      (s, l) => s + Math.min(l.installmentAmount, l.remaining),
-      0
-    );
+    // const loanTotal = loans.reduce(
+    //   (s, l) => s + Math.min(l.installmentAmount, l.remaining),
+    //   0
+    // );
 
-    /* ------------------------------------------------
-       5️⃣ Scheduled deductions
-    -------------------------------------------------*/
-    const loanInstallments = loans.map(l => ({
-      source: "LOAN",
-      refId: l._id,
-      baseInstallment: l.installmentAmount,
-      scheduled: Math.min(l.installmentAmount, l.remaining),
-      direction: l.direction
-    }));
+    const dbsTotal = calculateTotals(dbsAdjustments);
+    const penaltyTotal = calculateTotals(penaltyAdjustments);
+    const loanTotal = calculateTotals(loans)
 
-    const adjustmentInstallments = deductionAdjustments.map(a => ({
-      source: a.type,
-      refId: a._id,
-      baseInstallment: a.installmentAmount,
-      scheduled: Math.min(a.installmentAmount, a.remaining),
-      direction: a.direction
-    }));
+
+
+    const loanInstallments = loans.map(l => {
+      const effective = getEffectiveInstallment(l);
+      const scheduled = Math.min(effective, l.remaining);
+
+      return {
+        source: "LOAN",
+        refId: l._id,
+        baseInstallment: l.installmentAmount,
+        previousCarryForward: l.carryForward || 0,
+        effectiveInstallment: effective,
+        scheduled,
+        direction: l.direction
+      };
+    });
+
+
+    const adjustmentInstallments = deductionAdjustments.map(a => {
+      const effective = getEffectiveInstallment(a);
+      const scheduled = Math.min(effective, a.remaining);
+
+      return {
+        source: a.type,
+        refId: a._id,
+        baseInstallment: a.installmentAmount,
+        previousCarryForward: a.carryForward || 0,
+        effectiveInstallment: effective,
+        scheduled,
+        direction: a.direction
+      };
+    });
+
 
     const allInstallments = [...loanInstallments, ...adjustmentInstallments];
 

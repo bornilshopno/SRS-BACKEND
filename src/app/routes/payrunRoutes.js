@@ -3,6 +3,7 @@ import { controlHoldStatus, createWeeklyPayrunController, getWeeklyPayrunControl
 import { payrunPreview } from "../controllers/payrunPreview.js";
 import { payrunBefore } from "../controllers/payrunBefore.js";
 import { payrunPreviewFinal } from "../controllers/payrunPreviewFinal.js";
+import { revisedPayrunPreview } from "../controllers/revisedPayrunPreview.js";
 
 const router=express.Router()
 
@@ -21,6 +22,8 @@ router.put("/weeklyPayrun/update",updateWeeklyPayrunController)
 // POST "/api/payruns/preview"
 router.post("/preview", payrunPreviewFinal);
 // router.post("/before", payrunBefore);
+
+router.post("/revisedPreview", revisedPayrunPreview )
 
 //PATCH "/api/payruns/holdStatus"
 router.patch("/holdStatus", controlHoldStatus)
