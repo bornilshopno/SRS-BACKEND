@@ -24,3 +24,23 @@ export const extractAdjustments = (invoiceDoc) => {
 
   return list.filter(a => (a.paid !== 0 || a.scheduled !== 0));
 };
+
+
+export const formatAdjustments = (totalAdjusted = [], invoiceDoc={}) => {
+  const list = [];
+    for (const adj of totalAdjusted) {
+      list.push({
+        source: adj.source,
+        refId: adj.refId,
+        paid: adj.paid || 0,
+        scheduled: adj.scheduled || 0,
+        carryForward:adj.carryForward || 0,
+        revision: invoiceDoc.revision || 0,
+        invoiceId: invoiceDoc.id.toString(),
+        year: invoiceDoc.year,
+        week: invoiceDoc.week
+      });
+    }
+
+  return list.filter(a => (a.paid !== 0 || a.scheduled !== 0));
+};

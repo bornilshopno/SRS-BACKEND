@@ -148,6 +148,14 @@ export const createInvoiceData = async (week, year, driverWiseInvoiceData) => {
 }
 
 
+export const getInvoiceByWeekAndYear=async(week,year)=>{
+  const collection = await getInvoiceCollection();
+  
+
+
+}
+
+
 export const createOrMergeInvoice = async (week, year, data) => {
   const collection = await getInvoiceCollection();
   const yearNum = Number(year);
@@ -343,17 +351,17 @@ export const patchInvoiceData = async (week, year, driverWiseInvoiceData) => {
   const collection = await getInvoiceCollection();
 
 
-  const updatedDriver = driverWiseInvoiceData[0];
+  const updatedDriverInvoice = driverWiseInvoiceData[0];
   try {
     const result = await collection.updateOne(
       {
         year,
         week,
-        "driverWiseInvoiceData.driverId": updatedDriver.driverId
+        "driverWiseInvoiceData.driverId": updatedDriverInvoice.driverId
       },
       {
         $set: {
-          "driverWiseInvoiceData.$": updatedDriver
+          "driverWiseInvoiceData.$": updatedDriverInvoice
         }
       }
     );
@@ -366,8 +374,8 @@ export const patchInvoiceData = async (week, year, driverWiseInvoiceData) => {
 
 
 
-    const mailResult = await processInvoices(driverWiseInvoiceData)
-    console.log("MERGE mail result", mailResult)
+    // const mailResult = await processInvoices(driverWiseInvoiceData)
+    // console.log("MERGE mail result", mailResult)
 
 
     const dataForPayrun = { week, year, driverId: updatedDriver.driverId, updatedWeekData: driverWiseInvoiceData[0].data.weekData }
@@ -391,3 +399,75 @@ export const patchInvoiceData = async (week, year, driverWiseInvoiceData) => {
 
 }
 
+
+// export const reviseInvoiceData = async (week, year, updatedDriverInvoice) => {
+//   const collection = await getInvoiceCollection();
+
+//   try {
+//     const result = await collection.updateOne(
+//       {
+//         year,
+//         week,
+//         "driverWiseInvoiceData.driverId": updatedDriverInvoice.driverId
+//       },
+//       {
+//         $set: {
+//           "driverWiseInvoiceData.$": updatedDriverInvoice
+//         }
+//       }
+//     );
+
+//     if (result.matchedCount === 0) {
+//       return res.status(404).json({
+//         message: "Weekly invoice or driver not found"
+//       });
+//     }
+
+//     return result
+
+//   }
+//   catch (err) {
+//     console.error("Update weekly invoice error:", err);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// }
+
+export const reviseInvoiceData = async (week, year, updatedDriverInvoice) => {
+  const collection = await getInvoiceCollection();
+
+  try {
+    const updatedDoc = await collection.findOneAndUpdate(
+      {
+        year,
+        week,
+        "driverWiseInvoiceData.driverId": updatedDriverInvoice.driverId
+      },
+      {
+        $set: {
+          "driverWiseInvoiceData.$": updatedDriverInvoice
+        }
+      },
+      {
+        returnDocument: "after",   // ← crucial: "after" = updated version, "before" = old version
+      }
+    );
+
+    // console.log("reviseInvoiceData", updatedDoc)
+
+    if (!updatedDoc) {
+      return ({
+        message: "Weekly invoice or driver not found"
+      });
+    }
+
+    // Success → return the full updated document
+    return ({
+      message: "Invoice updated successfully",
+      invoice: updatedDoc
+    });
+
+  } catch (err) {
+    console.error("Update weekly invoice error:", err);
+    return ({ message: "Internal server error" });
+  }
+};

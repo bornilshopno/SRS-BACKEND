@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import { getCollection } from "../../utils/getCollection.js";
-import { extractAdjustments } from "./finance.extractor.js";
+import { extractAdjustments, formatAdjustments } from "./finance.extractor.js";
 import { groupBy } from "../../utils/groupBy.js";
 import { markInvoiceApplied, markInvoiceFailed } from "./invoiceStatusMarker.js";
 import { withTransaction } from "../../utils/withTransaction.js";
@@ -36,7 +36,7 @@ export const processInvoiceFinance = async (invoiceId) => {
   try {
     /* 1️⃣ Extract normalized adjustments */
     const adjustments = extractAdjustments(invoice);
-// console.log("financeService", adjustments)//okay
+    // console.log("financeService", adjustments)//okay
     if (!adjustments.length) {
       await markInvoiceApplied(invoiceId);
       return;
@@ -57,7 +57,7 @@ export const processInvoiceFinance = async (invoiceId) => {
     /* 4️⃣ LOAN processing */
     if (bySource.LOAN) {
       const byLoan = groupBy(bySource.LOAN, a => a.refId);
-// console.log("byLoadn", byLoan)//okay
+      // console.log("byLoadn", byLoan)//okay
       for (const loanId in byLoan) {
         await withTransaction(async (session) => {
           const loan = await LoanRepo.findById(loanId, session);
@@ -101,6 +101,78 @@ export const processInvoiceFinance = async (invoiceId) => {
     throw error;
   }
 };
+
+/* ------------------ revise financial adjustments ------------------ */
+export const reviseInvoiceFinance = async (revisedAdjustments, invoiceDoc) => {
+  if (!revisedAdjustments.length) {
+    await markInvoiceApplied(invoiceDoc.id);
+    return;
+  }
+  try {
+    /* 1️⃣ Extract normalized adjustments */
+    const adjustments = formatAdjustments(revisedAdjustments, invoiceDoc)
+
+    
+
+    /* 2️⃣ Idempotency protection */
+    const uniqueAdjustments = dedupeByKey(
+      adjustments,
+      a => `${a.invoiceId}-${a.refId}`
+    );
+
+    /* 3️⃣ Group by source */
+    const bySource = groupBy(uniqueAdjustments, a => a.source);
+
+    /* 4️⃣ LOAN processing */
+    if (bySource.LOAN) {
+      const byLoan = groupBy(bySource.LOAN, a => a.refId);
+      // console.log("byLoadn", byLoan)//okay
+      for (const loanId in byLoan) {
+        await withTransaction(async (session) => {
+          const loan = await LoanRepo.findById(loanId, session);
+          if (!loan) {
+            throw new Error(`Loan not found: ${loanId}`);
+          }
+
+          await applyInstallments(loan, byLoan[loanId]);
+          await LoanRepo.save(loan, session);
+        });
+      }
+    }
+
+    /* 5️⃣ Adjustment processing (PENALTY / DBS / CTP) */
+    const otherTypes = ["PENALTY", "DBS", "CTP"];
+
+    for (const type of otherTypes) {
+      if (!bySource[type]) continue;
+
+      const grouped = groupBy(bySource[type], a => a.refId);
+
+      for (const refId in grouped) {
+        await withTransaction(async (session) => {
+          const adj = await AdjustmentRepo.findById(refId, session);
+          if (!adj) {
+            throw new Error(`Adjustment not found: ${refId}`);
+          }
+
+          await applyInstallments(adj, grouped[refId]);
+          await AdjustmentRepo.save(adj, session);
+        });
+      }
+    }
+
+
+
+    /* 6️⃣ Mark invoice finance-applied */
+    await markInvoiceApplied(invoiceDoc.id);
+
+    return ({success: true})
+
+  } catch (error) {
+    await markInvoiceFailed(invoiceDoc.id, error);
+    throw error;
+  }
+}
 
 /* ------------------ unified installment engine ------------------ */
 

@@ -4,7 +4,7 @@
 export async function revisedPayrunPreview(req, res) {
     try {
         const { weeklyTotal, vatAmount, totalAdjustments } = req.body
-        console.log(weeklyTotal, vatAmount, totalAdjustments)
+        // console.log(weeklyTotal, vatAmount, totalAdjustments)
 
         /* ------------------------------------------------
           1️⃣ Separate adjustments
