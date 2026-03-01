@@ -10,6 +10,9 @@ import loanRoutes from "./app/routes/loanRoutes.js";
 import adjustmentRoutes from "./app/routes/adjustmentRoutes.js";
 import invoiceRoutes from "./app/routes/invoiceRoutes.js";
 import defaultRoutes from "./app/routes/defaultRoutes.js";
+import mailRoutes from "./app/routes/mailRoutes.js";
+import path from "path";
+
 
 const app = express();
 
@@ -21,18 +24,7 @@ app.use(cors({
 }));
 
 
-// http://localhost:5173
-// https://srsmanagement.netlify.app
 
-// app.use(
-//   cors({
-//     origin:
-//       process.env.NODE_ENV === "production"
-//         ? process.env.CLIENT_URL   // Production URL from env
-//         : "http://localhost:5173", // Dev URL
-//     credentials: true,
-//   })
-// );
 
 
 app.use(express.json());
@@ -40,15 +32,19 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Routes
-app.use("/api/users", userRoutes);
-app.use("/api/terms", termsRoutes);
-app.use("/api/activity", activityRoutes);
-app.use("/api/routings", routingRoutes);
-app.use("/api/payruns", payrunRoutes);
-app.use("/api/adjustments", adjustmentRoutes);
-app.use("/api/loans", loanRoutes);
-app.use('/api/invoices', invoiceRoutes)
-app.use('/api/defaults', defaultRoutes)
+app.use("/users", userRoutes);
+app.use("/terms", termsRoutes);
+app.use("/activity", activityRoutes);
+app.use("/routings", routingRoutes);
+app.use("/payruns", payrunRoutes);
+app.use("/adjustments", adjustmentRoutes);
+app.use("/loans", loanRoutes);
+app.use('/invoices', invoiceRoutes)
+app.use('/defaults', defaultRoutes)
+app.use('/mailing', mailRoutes)
+
+//Serve fileUploads as Static Folder
+app.use("/uploads", express.static(path.join(process.cwd(), "fileUploads")));
 
 // Root route
 app.get("/", (req, res) => {

@@ -191,7 +191,7 @@ export const reviseInvoice = async (req, res) => {
     // console.log("from reviseInvoice3", reviseAdjustments,"mailDoc", mailDoc, "invoiceDoc", invoiceDoc, "adjustments", dataForFinancialAdjustments)
     // console.log("from reviseInvoice3", reviseAdjustments, "mailDoc", mailDoc,)
     const mailingResult = await mailInvoices(mailDoc);//mail account suspended
-    console.log("from reviseInvoice4", mailingResult)
+    // console.log("from reviseInvoice4", mailingResult)
     if (activityDoc) {
       try {
         await logActivity(activityDoc);
@@ -200,7 +200,7 @@ export const reviseInvoice = async (req, res) => {
         console.error("Failed to log activity (but user was updated):", logError);
       }
     }
-    // console.log("from reviseInvoice", revisedInvoice, payrunResult, reviseAdjustments, mailingResult)//okay
+    console.log("from reviseInvoice", revisedInvoice, payrunResult, reviseAdjustments, mailingResult)//okay
     res.json({ success: true, revisedInvoice, payrunResult, reviseAdjustments, mailingResult });
 
   } catch (error) {

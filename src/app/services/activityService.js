@@ -11,7 +11,7 @@ export async function logActivity(data) {
         userUpdated: new ObjectId(data.userUpdated)
     };
 
-    console.log("payload", payload)
+    // console.log("payload", payload)
 
     const result = await activityCollection.insertOne(payload);
     return result;

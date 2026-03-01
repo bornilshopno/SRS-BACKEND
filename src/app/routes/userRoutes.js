@@ -1,9 +1,50 @@
 import express from "express";
 import multer from "multer";
-import { registerUser, loginUser, fetchUserByEmail, uploadUserFile, updateUserPersonalInfo, updateUserResidenceInfo, fetchAllUsers, fetchUserById, createEmployee, isAdmin, isSrsUser, checkDuplicateAccountController, deleteEmployee, } from "../controllers/userController.js";
+import { registerUser, loginUser, fetchUserByEmail, uploadUserFile, updateUserPersonalInfo, updateUserResidenceInfo, fetchAllUsers, fetchUserById, createEmployee, isAdmin, isSrsUser, checkDuplicateAccountController, deleteEmployee, uploadFile, } from "../controllers/userController.js";
+import { fileUpload } from "../../utils/multerSetUp.js";
+
 
 const router = express.Router();
+//Multer Configuration
+// Ensure uploads folder exists
+
+
+// const uploadDir = path.join(process.cwd(), "fileUploads");
+// if (!fs.existsSync(uploadDir)) {
+//     fs.mkdirSync(uploadDir, { recursive: true });
+// }
+
+// const storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         cb(null, uploadDir);
+//     },
+//     filename: function (req, file, cb) {
+//         const uniqueName =
+//             Date.now() + "-" + file.originalname.replace(/\s+/g, "");
+//         cb(null, uniqueName);
+//     },
+// });
+
+// export const fileUpload = multer({
+//     storage,
+//     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+// });
+
 const upload = multer({ dest: "uploads/" });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //done
 router.post("/register", registerUser);
 // GET /api/users/:email//done
@@ -12,6 +53,11 @@ router.get("/:email", fetchUserByEmail);
 router.get("/user/:id", fetchUserById);
 // POST /api/users/upload/:email
 router.post("/upload/:email", upload.single("file"), uploadUserFile);
+
+// POST /api/users/fileUpload/:email
+router.post("/fileUpload/:email", fileUpload.single("file"), uploadFile)
+
+
 //PATCH /api/users/userPersonal/email
 router.patch("/userPersonal/:email", updateUserPersonalInfo);
 //PATCH /api/users/userResidence/email

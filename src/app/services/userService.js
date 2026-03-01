@@ -1,7 +1,8 @@
 import { ObjectId } from "mongodb";
 import cloudinary from "../../config/cloudinaryConfig.js";
 import { getCollection } from "../../utils/getCollection.js";
-
+import fs from "fs";
+import path from "path";
 
 export async function findUserByEmail(email) {
   const userCollection = await getCollection("users");
@@ -84,6 +85,63 @@ export async function uploadFileAndSaveToUser(filePath, filekey, email) {
     throw new Error("Upload or DB update failed: " + error.message);
   }
 }
+
+
+export async function saveFileUrlToUser(fileUrl, fileKey, email) {
+  const userCollection = await getCollection("users");
+
+  let updateOperation;
+
+  // Single-value fields (replace existing)
+  if (fileKey === "signature" || fileKey === "profileImage") {
+    updateOperation = { $set: { [fileKey]: fileUrl } };
+  } 
+  // Multi-file fields (store as array)
+  else {
+    updateOperation = { $addToSet: { [fileKey]: fileUrl } };
+  }
+
+  const updateResult = await userCollection.updateOne(
+    { email },
+    updateOperation
+  );
+
+  if (updateResult.matchedCount === 0) {
+    throw new Error("User not found");
+  }
+
+  return { updated: updateResult.modifiedCount > 0 };
+}
+
+
+
+
+export async function removeFileFromUser(fileUrl, fileKey, email) {
+  const userCollection = await getCollection("users");
+
+  // 1️⃣ Remove from DB
+  const updateResult = await userCollection.updateOne(
+    { email },
+    { $pull: { [fileKey]: fileUrl } }
+  );
+
+  if (updateResult.matchedCount === 0) {
+    throw new Error("User not found");
+  }
+
+  // 2️⃣ Remove file from server
+  const fileName = fileUrl.split("/uploads/")[1];
+  const filePath = path.join(process.cwd(), "uploads", fileName);
+
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+  }
+
+  return {
+    updated: updateResult.modifiedCount > 0,
+  };
+}
+
 
 export const updateUserPersonalService = async (email, updatedDoc) => {
   const userCollection = await getCollection("users");

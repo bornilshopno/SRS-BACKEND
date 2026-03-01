@@ -1,4 +1,4 @@
-import { checkAdminStatus, checkDuplicateAccount, checkSrsUser, createUser, deleteEmployeeService, findUserByEmail, getAllUsers, getUserByEmail, getUserById, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
+import { checkAdminStatus, checkDuplicateAccount, checkSrsUser, createUser, deleteEmployeeService, findUserByEmail, getAllUsers, getUserByEmail, getUserById, saveFileUrlToUser, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
 import generateToken from "../../utils/generateToken.js";
 import { createEmployeeService } from "../services/userService.js";
 import { logActivity } from "../services/activityService.js";
@@ -89,6 +89,29 @@ export async function uploadUserFile(req, res) {
     res.status(200).json({
       message: "File uploaded and saved successfully",
       url: result.url,
+    });
+  } catch (error) {
+    console.error("❌ Upload failed:", error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function uploadFile(req, res) {
+  try {
+    const email = req.params.email;
+    const fileKey = req.body.docKey;
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+
+    const result = await saveFileUrlToUser(fileUrl, fileKey, email);
+
+    res.status(200).json({
+      message: "File uploaded successfully",
+      url: fileUrl,
     });
   } catch (error) {
     console.error("❌ Upload failed:", error);
