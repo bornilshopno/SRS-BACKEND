@@ -24,3 +24,32 @@ export const sendEmailByBrevo = async ({ to, subject, html }) => {
     console.error("Email error:", error);
   }
 };
+
+export const sendInvoiceEmailByBrevo = async ({
+  to,
+  subject,
+  html,
+  pdfBuffer,
+  filename,
+}) => {
+  try {
+    await transporter.sendMail({
+      from: `"SRS Driver App" <noreply@srsdriverapp.com>`,
+      to,
+      subject,
+      html,
+      attachments: [
+        {
+          filename: filename,
+          content: pdfBuffer, // this must be a Buffer
+          contentType: "application/pdf",
+        },
+      ],
+    });
+
+    console.log("Invoice email sent to:", to);
+  } catch (error) {
+    console.error("Brevo email error:", error);
+    throw error;
+  }
+};

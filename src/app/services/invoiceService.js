@@ -2,6 +2,7 @@
 
 import { getCollection } from '../../utils/getCollection.js';
 import { sendInvoiceEmail } from './emailService.js'
+import { processInvoices } from './invoice.mailing.js';
 import { updatePayrunInvoiceStatus } from './invoice.payrun.adjustments.js';
 import { PatchWeeklyPayrunService } from './payrunService.js';
 import { generateInvoicePdf } from './pdfService.js'
@@ -24,54 +25,54 @@ async function getDriverCollection() {
  * @param {Array<Object>} invoices
  * @returns {Object} summary
  */
-export const processInvoices = async (invoices = []) => {
-  const results = {
-    total: invoices.length,
-    sent: 0,
-    failed: 0,
-    details: []
-  }
+// export const processInvoices = async (invoices = []) => {
+//   const results = {
+//     total: invoices.length,
+//     sent: 0,
+//     failed: 0,
+//     details: []
+//   }
 
-  for (const invoice of invoices) {
-    try {
+//   for (const invoice of invoices) {
+//     try {
 
-      const driverCollection = await getDriverCollection();
-      const driverInfo = await driverCollection.findOne({ _id: new ObjectId(invoice.driverId) });
-      const driver = {
-        name: driverInfo.name,
-        niNumber: driverInfo.nationalInsuranceNumber,
-        address: driverInfo.address,
-        vatNumber: driverInfo.vatNumber,
-      }
+//       const driverCollection = await getDriverCollection();
+//       const driverInfo = await driverCollection.findOne({ _id: new ObjectId(invoice.driverId) });
+//       const driver = {
+//         name: driverInfo.name,
+//         niNumber: driverInfo.nationalInsuranceNumber,
+//         address: driverInfo.address,
+//         vatNumber: driverInfo.vatNumber,
+//       }
 
 
-      const pdfBuffer = await generateInvoicePdf({ ...invoice, ...driver })
+//       const pdfBuffer = await generateInvoicePdf({ ...invoice, ...driver })
 
-      await sendInvoiceEmail({
-        to: invoice.email,
-        subject: `Invoice ${invoice.reference}`,
-        html: `<p>Dear ${driver.name},</p><p>Please find your invoice attached.</p>`,
-        pdfBuffer,
-        filename: `invoice-${invoice.reference}.pdf`
-      })
+//       await sendInvoiceEmail({
+//         to: invoice.email,
+//         subject: `Invoice ${invoice.reference}`,
+//         html: `<p>Dear ${driver.name},</p><p>Please find your invoice attached.</p>`,
+//         pdfBuffer,
+//         filename: `invoice-${invoice.reference}.pdf`
+//       })
 
-      results.sent++
-      results.details.push({
-        invoiceNumber: invoice.reference,
-        status: 'sent'
-      })
-    } catch (error) {
-      results.failed++
-      results.details.push({
-        invoiceNumber: invoice?.reference,
-        status: 'failed',
-        error: error.message
-      })
-    }
-  }
+//       results.sent++
+//       results.details.push({
+//         invoiceNumber: invoice.reference,
+//         status: 'sent'
+//       })
+//     } catch (error) {
+//       results.failed++
+//       results.details.push({
+//         invoiceNumber: invoice?.reference,
+//         status: 'failed',
+//         error: error.message
+//       })
+//     }
+//   }
 
-  return results
-}
+//   return results
+// }
 
 export const createInvoiceData = async (week, year, driverWiseInvoiceData) => {
   const collection = await getInvoiceCollection();
