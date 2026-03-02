@@ -1,5 +1,5 @@
 import { getCollection } from "../../utils/getCollection.js";
-
+import { ObjectId } from "mongodb";
 
 
 async function getThisCollection() {
@@ -20,18 +20,115 @@ const data={...payload,createdAt:Date.now() }
 /* --------------------------------------------------
    Get Loans or Loan by ID 
 -----------------------------------------------------*/
-export async function getLoanService(id) {
-    const collection = await getThisCollection();
-    if (id) {
-        // const query = { driverId: new ObjectId(id) };
-        const query = { driverId: id };
-        const loan=await collection.findOne(query)
-        return loan
-    }
-    const loans = await collection.find().toArray();
-    return loans;
-}
+// const query = { driverId: new ObjectId(id) };
 
+// export async function getLoanService(id) {
+//     const collection = await getThisCollection();
+//     if (id) {
+//                 const query = { driverId: id };
+//         const loan=await collection.findOne(query)
+//         return loan
+//     }
+//     const loans = await collection.find().toArray();
+//     return loans;
+// }
+
+
+
+
+export async function getLoanService(id) {
+  const collection = await getThisCollection();
+
+  const pipeline = [];
+
+  // If specific driverId is provided
+  if (id) {
+    pipeline.push({
+      $match: { driverId: id } // since driverId stored as string
+    });
+  }
+
+  // Convert string IDs to ObjectId for lookup
+  pipeline.push(
+    {
+      $addFields: {
+        driverObjectId: { $toObjectId: "$driverId" },
+        updatedByObjectId: { $toObjectId: "$updatedBy" }
+      }
+    },
+
+    // Lookup loanee (driver)
+    {
+      $lookup: {
+        from: "users",
+        localField: "driverObjectId",
+        foreignField: "_id",
+        as: "loanee"
+      }
+    },
+    {
+      $unwind: {
+        path: "$loanee",
+        preserveNullAndEmptyArrays: true
+      }
+    },
+
+    // Lookup updatedBy user
+    {
+      $lookup: {
+        from: "users",
+        localField: "updatedByObjectId",
+        foreignField: "_id",
+        as: "updatedByUser"
+      }
+    },
+    {
+      $unwind: {
+        path: "$updatedByUser",
+        preserveNullAndEmptyArrays: true
+      }
+    },
+
+    // Final projection
+    {
+      $project: {
+        _id: 1,
+        driverId: 1,
+        loanAmount: 1,
+        installmentAmount: 1,
+        reason: 1,
+        startYear: 1,
+        startWeek: 1,
+        totalAmount: 1,
+        type: 1,
+        direction: 1,
+        remaining: 1,
+        status: 1,
+        history: 1,
+        createdAt: 1,
+
+        // Loanee fields
+        "loanee.name": 1,
+        "loanee.email": 1,
+        "loanee.srsDriverNumber": 1,
+        "loanee.profileImage": 1,
+        "loanee.site": 1,
+
+        // UpdatedBy fields
+        "updatedByUser.name": 1,
+        "updatedByUser.email": 1,
+        "updatedByUser.role": 1
+      }
+    },
+
+    { $sort: { createdAt: -1 } }
+  );
+
+  const result = await collection.aggregate(pipeline).toArray();
+
+  // If single driver requested → return array of loans for that driver
+  return result;
+}
 
 // {
 //   _id,
