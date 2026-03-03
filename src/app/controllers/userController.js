@@ -105,7 +105,8 @@ export async function uploadFile(req, res) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+     // const fileUrl = `${req.protocol}://${req.get("host")}/api/uploads/${req.file.filename}`;
+    const fileUrl = `/fileUploads/${req.file.filename}`;
 
     const result = await saveFileUrlToUser(fileUrl, fileKey, email);
 

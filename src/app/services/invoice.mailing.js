@@ -38,7 +38,7 @@ export const processInvoices = async (invoices = []) => {
                 // html: `<p>Dear ${driver.name},</p><p>Please find your invoice attached.</p>`,
                 html: `
   <div style="font-family: Arial, sans-serif;">
-    <h2>Invoice ${invoice.reference}</h2>
+  
     <p>Dear ${driver.name},</p>
     <p>Please find your invoice attached.</p>
     <p>Thank you for working with SRS.</p>

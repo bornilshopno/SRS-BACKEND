@@ -200,7 +200,7 @@ export const reviseInvoice = async (req, res) => {
         console.error("Failed to log activity (but user was updated):", logError);
       }
     }
-    console.log("from reviseInvoice", revisedInvoice, payrunResult, reviseAdjustments, mailingResult)//okay
+    // console.log("from reviseInvoice", revisedInvoice, payrunResult, reviseAdjustments, mailingResult)//okay
     res.json({ success: true, revisedInvoice, payrunResult, reviseAdjustments, mailingResult });
 
   } catch (error) {

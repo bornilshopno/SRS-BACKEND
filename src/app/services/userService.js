@@ -3,6 +3,10 @@ import cloudinary from "../../config/cloudinaryConfig.js";
 import { getCollection } from "../../utils/getCollection.js";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export async function findUserByEmail(email) {
   const userCollection = await getCollection("users");
@@ -86,33 +90,65 @@ export async function uploadFileAndSaveToUser(filePath, filekey, email) {
   }
 }
 
-
 export async function saveFileUrlToUser(fileUrl, fileKey, email) {
+  
   const userCollection = await getCollection("users");
 
-  let updateOperation;
+  // Step 1: fetch existing user data
+  const user = await userCollection.findOne({ email });
+  if (!user) throw new Error("User not found");
 
-  // Single-value fields (replace existing)
-  if (fileKey === "signature" || fileKey === "profileImage") {
-    updateOperation = { $set: { [fileKey]: fileUrl } };
+  console.log('fileKey', fileKey)
+
+  // Step 2: delete previous file if it's a single-value field
+  if ((fileKey === "signature" || fileKey === "profileImage") && user[fileKey]) {
+
+    const oldFilePath = path.join(__dirname, "../../../fileUploads", path.basename(user[fileKey]));
+    try {
+      await fs.unlink(oldFilePath); // deletes file from local storage
+      console.log(`Deleted old file: ${oldFilePath}`);
+    } catch (err) {
+      console.warn(`Old file not found or cannot delete: ${oldFilePath}`);
+    }
+  }
+
+  // Step 3: prepare update operation
+
+let updateOperation;
+
+if (fileKey === "signature" || fileKey === "profileImage") {
+  updateOperation = { $set: { [fileKey]: fileUrl } };
+} else {
+  const existingValue = user[fileKey];
+
+  if (!existingValue) {
+    // first time → create array
+    updateOperation = { $set: { [fileKey]: [fileUrl] } };
   } 
-  // Multi-file fields (store as array)
+  else if (!Array.isArray(existingValue)) {
+    // convert string → array
+    updateOperation = { 
+      $set: { [fileKey]: [existingValue, fileUrl] } 
+    };
+  } 
   else {
-    updateOperation = { $addToSet: { [fileKey]: fileUrl } };
+    // already array
+    updateOperation = { 
+      $addToSet: { [fileKey]: fileUrl } 
+    };
   }
-
-  const updateResult = await userCollection.updateOne(
-    { email },
-    updateOperation
-  );
-
-  if (updateResult.matchedCount === 0) {
-    throw new Error("User not found");
-  }
-
-  return { updated: updateResult.modifiedCount > 0 };
 }
 
+
+
+
+
+console.log(updateOperation, "update")
+
+  // Step 4: update database
+  const updateResult = await userCollection.updateOne({ email }, updateOperation);
+  return { updated: updateResult.modifiedCount > 0 };
+}
 
 
 
@@ -141,7 +177,6 @@ export async function removeFileFromUser(fileUrl, fileKey, email) {
     updated: updateResult.modifiedCount > 0,
   };
 }
-
 
 export const updateUserPersonalService = async (email, updatedDoc) => {
   const userCollection = await getCollection("users");
@@ -294,3 +329,30 @@ export async function verifyUser(email, password) {
   // Normally you'd fetch and compare from DB
   return { id: 1, email };
 }
+
+//function re-written
+// export async function saveFileUrlToUser(fileUrl, fileKey, email) {
+//   const userCollection = await getCollection("users");
+
+//   let updateOperation;
+
+  
+//   if (fileKey === "signature" || fileKey === "profileImage") {
+//     updateOperation = { $set: { [fileKey]: fileUrl } }; // Single-value fields (replace existing)
+//   } 
+  
+//   else {
+//     updateOperation = { $addToSet: { [fileKey]: fileUrl } }; // Multi-file fields (store as array)
+//   }
+
+//   const updateResult = await userCollection.updateOne(
+//     { email },
+//     updateOperation
+//   );
+
+//   if (updateResult.matchedCount === 0) {
+//     throw new Error("User not found");
+//   }
+
+//   return { updated: updateResult.modifiedCount > 0 };
+// }
