@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { registerUser, loginUser, fetchUserByEmail, uploadUserFile, updateUserPersonalInfo, updateUserResidenceInfo, fetchAllUsers, fetchUserById, createEmployee, isAdmin, isSrsUser, checkDuplicateAccountController, deleteEmployee, uploadFile, } from "../controllers/userController.js";
+import { registerUser, loginUser, fetchUserByEmail, uploadUserFile, updateUserPersonalInfo, updateUserResidenceInfo, fetchAllUsers, fetchUserById, createEmployee, isAdmin, isSrsUser, checkDuplicateAccountController, deleteEmployee, uploadFile, commonDuplicateFieldCheckController, } from "../controllers/userController.js";
 import { fileUpload } from "../../utils/multerSetUp.js";
 
 
@@ -37,6 +37,11 @@ router.get('/srs/:email', isSrsUser);
 // GET /api/users/check-bank-account
 // query: ?bankAccountNumber=12345678&excludeDriverId=abc123
 router.get('/check/bank-account', checkDuplicateAccountController)
+
+// GET /api/users/check-duplicate?field=bankAccountNumber&value=12345678
+// GET /api/users/check-duplicate?field=srsDriverNumber&value=DR123
+router.get('/check/duplicate', commonDuplicateFieldCheckController)
+
 // DELETE /api/users/:email//done
 router.delete("/:email", deleteEmployee);
 

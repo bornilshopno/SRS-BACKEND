@@ -323,6 +323,30 @@ export const checkDuplicateAccount = async (bankAccountNumber, excludeDriverId) 
 }
 
 
+export const checkDuplicateField = async (field, value, excludeId) => {
+  if (!field || !value) {
+    return { success: false };
+  }
+
+  const userCollection = await getCollection("users");
+
+  const query = {
+    [field]: value
+  };
+
+  if (excludeId) {
+    query._id = { $ne: excludeId };
+  }
+
+  const exists = await userCollection.findOne(query);
+
+  return {
+    success: true,
+    isDuplicate: !!exists
+  };
+};
+
+
 
 // not used yet
 export async function verifyUser(email, password) {

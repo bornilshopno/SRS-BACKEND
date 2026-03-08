@@ -1,4 +1,4 @@
-import { checkAdminStatus, checkDuplicateAccount, checkSrsUser, createUser, deleteEmployeeService, findUserByEmail, getAllUsers, getUserByEmail, getUserById, saveFileUrlToUser, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
+import { checkAdminStatus, checkDuplicateAccount, checkDuplicateField, checkSrsUser, createUser, deleteEmployeeService, findUserByEmail, getAllUsers, getUserByEmail, getUserById, saveFileUrlToUser, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
 import generateToken from "../../utils/generateToken.js";
 import { createEmployeeService } from "../services/userService.js";
 import { logActivity } from "../services/activityService.js";
@@ -342,6 +342,20 @@ export const checkDuplicateAccountController = async (req, res) => {
     res.status(500).send({ error: { message: 'Internal check error' } });
   }
 }
+
+
+export const commonDuplicateFieldCheckController = async (req, res) => {
+  try {
+    const { field, value, excludeId } = req.query;
+
+    const result = await checkDuplicateField(field, value, excludeId);
+
+    res.status(200).send(result);
+  } catch (error) {
+    console.error("Duplicate check error:", error);
+    res.status(500).send({ error: { message: "Internal check error" } });
+  }
+};
 
 //not checked
 
