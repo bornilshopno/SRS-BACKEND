@@ -130,6 +130,40 @@ export async function getLoanService(id) {
   return result;
 }
 
+/* --------------------------------------------------
+   Update a Loan  
+-----------------------------------------------------*/
+export const updateLoanService = async (loanId, update) => {
+  try {
+      const loanCollection = await getThisCollection();
+
+    const allowedFields = ["status", "installmentAmount"];
+
+    // Build safe update object
+    const updateData = {};
+    for (const key of allowedFields) {
+      if (update[key] !== undefined) {
+        updateData[key] = update[key];
+      }
+    }
+
+    const result = await loanCollection.updateOne(
+   { _id: new ObjectId(loanId) },
+      {
+        $set: {
+          ...updateData,
+          updatedAt: Date.now(),
+        },
+      }
+    );
+console.log("loanService", result)
+    return result;
+  } catch (error) {
+    throw new Error(`Failed to update loan: ${error.message}`);
+  }
+};
+
+
 // {
 //   _id,
 //   driverId,
