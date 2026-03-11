@@ -98,7 +98,7 @@ export async function saveFileUrlToUser(fileUrl, fileKey, email) {
   const user = await userCollection.findOne({ email });
   if (!user) throw new Error("User not found");
 
-  console.log('fileKey', fileKey)
+  console.log('fileKey', fileKey, fileUrl,email)
 
   // Step 2: delete previous file if it's a single-value field
   if ((fileKey === "signature" || fileKey === "profileImage") && user[fileKey]) {
@@ -184,7 +184,7 @@ export const updateUserPersonalService = async (email, updatedDoc) => {
   const updatedDocument = {
     $set: { ...updatedDoc },
   };
-  console.log("from service", updatedDocument)
+  // console.log("from service", updatedDocument)
   const result = await userCollection.updateOne(filter, updatedDocument);
   return result;
 };
@@ -195,7 +195,7 @@ export const updateUserResidenceService = async (email, updatedDoc) => {
   const updatedDocument = {
     $set: { residentialHistory: updatedDoc }
   }
-  console.log("from SERVICE", updatedDocument)
+  // console.log("from SERVICE", updatedDocument)
   const result = await userCollection.updateOne(filter, updatedDocument);
   return result;
 }

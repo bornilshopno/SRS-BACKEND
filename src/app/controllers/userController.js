@@ -109,7 +109,7 @@ export async function uploadFile(req, res) {
     const fileUrl = `/fileUploads/${req.file.filename}`;
 
     const result = await saveFileUrlToUser(fileUrl, fileKey, email);
-
+console.log("from controller result",fileKey, result)
     res.status(200).json({
       message: "File uploaded successfully",
       url: fileUrl,
