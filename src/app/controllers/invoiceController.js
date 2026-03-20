@@ -1,6 +1,8 @@
 // src/controllers/sendInvoices.controller.mjs
 
+import { getFirstWeekBySunday, getLastWeekBySunday } from '../../utils/getWeekBySunday.js'
 import { logActivity } from '../services/activityService.js'
+import { generateDeductionData, generateInvoiceReport } from '../services/invoiceServices/invoiceReportService.js'
 import { processInvoiceFinance, reviseInvoiceFinance } from '../services/financeService.js'
 import { processInvoices } from '../services/invoice.mailing.js'
 import { updatePayrunInvoiceStatus } from '../services/invoice.payrun.adjustments.js'
@@ -183,7 +185,7 @@ export const reviseInvoice = async (req, res) => {
   try {
     const revisedInvoice = await reviseInvoiceData(week, year, updatedDriverInvoice)
     const invoiceDoc = { id: revisedInvoice.invoice._id, week, year, revision: updatedDriverInvoice.revision || 0 }
-    const mailDoc=[revisedInvoice.invoice.driverWiseInvoiceData.find(d => d.driverId === updatedDriverInvoice.driverId)]
+    const mailDoc = [revisedInvoice.invoice.driverWiseInvoiceData.find(d => d.driverId === updatedDriverInvoice.driverId)]
     //  console.log("from reviseInvoice", revisedInvoice,invoiceDoc) //okay
     const payrunResult = await PatchWeeklyPayrunService(dataForPayrun)
     // console.log("from reviseInvoice2= pay run result", payrunResult, )//okay
@@ -248,3 +250,54 @@ export const generateInvoice = async (req, res) => {
     });
   }
 };
+
+
+export const getDeductionsByWeekRange = async (req, res) => {
+
+  try {
+    const { fromDate, toDate, type } = req.query;
+
+
+    const formattedFromDate = getFirstWeekBySunday(fromDate)
+    const formattedToDate = getLastWeekBySunday(toDate)
+
+    //output of console.log { weekNumber: 9, year: 2026 } { weekNumber: 42, year: 2027 }
+
+    const fromYear = formattedFromDate.year;
+    const fromWeek = formattedFromDate.weekNumber;
+    const toYear = formattedToDate.year;
+    const toWeek = formattedToDate.weekNumber;
+
+    const result = await generateDeductionData(fromYear, toYear, fromWeek, toWeek, type)
+    console.log(formattedFromDate, formattedToDate, result)
+    return res.status(200).json(result);
+  } catch (error) {
+
+  }
+
+
+}
+
+export const getInvoiceReportsByDateRange = async (req, res) => {
+  try {
+    const { fromDate, toDate, site } = req.query;
+
+
+    const formattedFromDate = getFirstWeekBySunday(fromDate)
+    const formattedToDate = getLastWeekBySunday(toDate)
+
+    //output of console.log { weekNumber: 9, year: 2026 } { weekNumber: 42, year: 2027 }
+
+    const fromYear = formattedFromDate.year;
+    const fromWeek = formattedFromDate.weekNumber;
+    const toYear = formattedToDate.year;
+    const toWeek = formattedToDate.weekNumber;
+
+    const result = await generateInvoiceReport(fromYear, toYear, fromWeek, toWeek, site)
+    console.log(formattedFromDate, formattedToDate, result)
+    return res.status(200).json(result);
+  } catch (error) {
+
+  }
+
+}

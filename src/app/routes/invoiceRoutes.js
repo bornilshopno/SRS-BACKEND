@@ -1,7 +1,7 @@
 // src/routes/invoice.routes.mjs
 
 import express from 'express'
-import { createInvoice, generateInvoice, getWeeklyInvoices, patchWeeklyInvoice, reviseInvoice, sendEmailbyIdYearWeekController, sendIndividualInvoice, sendInvoicesController } from '../controllers/invoiceController.js'
+import { createInvoice, generateInvoice, getDeductionsByWeekRange, getInvoiceReportsByDateRange, getWeeklyInvoices, patchWeeklyInvoice, reviseInvoice, sendEmailbyIdYearWeekController, sendIndividualInvoice, sendInvoicesController } from '../controllers/invoiceController.js'
 
 const router = express.Router()
 //POST/api/invoices/send
@@ -28,6 +28,10 @@ router.post('/sendEmail/byIdYearWeek', sendEmailbyIdYearWeekController)
 
 //GET/api/invoices/weeklyInvoice
 router.get("/weeklyInvoice", getWeeklyInvoices)
+//GET/api/invoices/deductions
+router.get("/deductions",getDeductionsByWeekRange)
+//GET/api/invoices/byDateRange
+router.get("/byDateRange",getInvoiceReportsByDateRange)
 
 
 
