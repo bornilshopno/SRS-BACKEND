@@ -1,4 +1,5 @@
-import { sendEmailByBrevo } from "../config/emailNodeMailer.js";
+import { sendEmailByBrevo } from "./services/emailServices/brevoEmailService.js";
+
 
 
 await sendEmailByBrevo({

@@ -12,6 +12,7 @@ import invoiceRoutes from "./app/routes/invoiceRoutes.js";
 import defaultRoutes from "./app/routes/defaultRoutes.js";
 import mailRoutes from "./app/routes/mailRoutes.js";
 import path from "path";
+import "./app/services/cronServices/complianceDrivers.js"
 
 
 const app = express();

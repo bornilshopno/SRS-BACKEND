@@ -1,4 +1,2 @@
 ***Update Issue***
-** development and deploy version matched on 04th of March 2:10AM ==deployed with Brevo Set Up **
-
-**development and deploy version matched on === 12March 12:40am==deploy version matching **
+** development and deploy version matched on 21th of March 2:10AM ==updated invoice report related api **

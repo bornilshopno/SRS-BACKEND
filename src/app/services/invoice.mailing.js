@@ -2,7 +2,8 @@ import { ObjectId } from "mongodb";
 import { getCollection } from "../../utils/getCollection.js";
 // import { sendInvoiceEmail } from "./emailService.js";
 import { generateInvoicePdf } from "./pdfService.js";
-import { sendInvoiceEmailByBrevo } from "../../config/emailNodeMailer.js";
+import { sendInvoiceEmailByBrevo } from "./emailServices/brevoEmailService.js";
+
 
 
 async function getDriverCollection() {

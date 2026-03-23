@@ -1,7 +1,8 @@
 // routes/testEmailRoute.js
 
 import express from "express";
-import { sendEmailByBrevo } from "../../config/emailNodeMailer.js";
+import { sendEmailByBrevo } from "../services/emailServices/brevoEmailService.js";
+
 0
 
 const router = express.Router();

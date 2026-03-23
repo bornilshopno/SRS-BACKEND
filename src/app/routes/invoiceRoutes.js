@@ -28,8 +28,10 @@ router.post('/sendEmail/byIdYearWeek', sendEmailbyIdYearWeekController)
 
 //GET/api/invoices/weeklyInvoice
 router.get("/weeklyInvoice", getWeeklyInvoices)
+
 //GET/api/invoices/deductions
 router.get("/deductions",getDeductionsByWeekRange)
+
 //GET/api/invoices/byDateRange
 router.get("/byDateRange",getInvoiceReportsByDateRange)
 
