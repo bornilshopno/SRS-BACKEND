@@ -2,7 +2,7 @@ import { transporter } from "../../../config/emailNodeMailer.js";
 
 const SRS_CC_EMAILS = [
     "optimisticashraf@gmail.com",
-    "mohashin.bhyian@gmail.com",
+    // "mohashin.bhyian@gmail.com",
 ];
 
 
@@ -59,15 +59,15 @@ export const sendComplianceEmail = async ({ to, name, status, docs }) => {
             ? "Compliance Failed - Immediate Action Required"
             : "Compliance Warning - Action Required";
 
-    const docList = docs
-        .map(
-            (d) =>
-                `${d.type} (Expiry: ${d.expiry
-                    ? new Date(d.expiry).toLocaleDateString("en-GB")
-                    : "Missing"
-                })`
-        )
-        .join(", ");
+    // const docList = docs
+    //     .map(
+    //         (d) =>
+    //             `${d.type} (Expiry: ${d.expiry
+    //                 ? new Date(d.expiry).toLocaleDateString("en-GB")
+    //                 : "Missing"
+    //             })`
+    //     )
+    //     .join(", ");
 
     // console.log("SUBJECT+DOC LIST", subject, docList)
 
@@ -89,7 +89,7 @@ export const sendComplianceEmail = async ({ to, name, status, docs }) => {
 
     <p>
       This is to inform you that your compliance status is 
-      <strong style="color: ${status === "FAILED" ? "#d9534f" : "#f0ad4e"};">
+      <strong style="color: ${status === "FAILED" ? "#d9534f" : "#fba52d"};">
         ${status}
       </strong>.
     </p>
@@ -99,11 +99,11 @@ export const sendComplianceEmail = async ({ to, name, status, docs }) => {
       ${docs
             .map(
                 (d) => `
-        <li>
-          ${d.type} - ${d.expiry
+        <li style="color: ${d.daysRemaining < 0 ? "#d9534f" : "#fba52d"};">
+          ${d.type} ( Expiry- ${d.expiry
                         ? new Date(d.expiry).toLocaleDateString("en-GB")
                         : "Missing"
-                    }
+                    } )
         </li>`
             )
             .join("")}
@@ -142,5 +142,5 @@ export const sendComplianceEmail = async ({ to, name, status, docs }) => {
         html
     });
 
-    console.log("res", res)
+    console.log("res---mail sent",)
 };

@@ -18,7 +18,6 @@ const getValidTimestamp = (value) => {
 export const checkDriverCompliance = (driver, warningDays = 7) => {
   const now = Date.now();
 
-  // Decide which fields to check dynamically
   const shouldSkipRTW =
     driver?.isUKnational === true || driver?.rtkNoLimit === true;
 
@@ -39,24 +38,62 @@ export const checkDriverCompliance = (driver, warningDays = 7) => {
       failedDocs.push({
         type: field.label,
         expiry: ts,
-        daysRemaining
+        daysRemaining,
       });
     } else if (daysRemaining <= warningDays) {
       warningDocs.push({
         type: field.label,
         expiry: ts,
-        daysRemaining
+        daysRemaining,
       });
     }
   }
 
-  if (failedDocs.length > 0) {
-    return { status: "FAILED", docs: failedDocs };
+  let status = "COMPLIANT";
+  if (failedDocs.length > 0) status = "FAILED";
+  else if (warningDocs.length > 0) status = "WARNING";
+
+  return {
+    status,
+    failedDocs,
+    warningDocs
+  };
+};
+
+
+
+
+export const getNonCompliantDrivers = (drivers, warningDays = 7) => {
+  const result = {
+    FAILED: [],
+    WARNING: []
+  };
+
+  for (const driver of drivers) {
+    const compliance = checkDriverCompliance(driver, warningDays);
+
+    if (compliance.failedDocs.length > 0) {
+      result.FAILED.push({
+        driver: {
+          name: driver.name,
+          srsDriverNumber: driver.srsDriverNumber,
+          email: driver.email,
+          emailStatus: driver.complianceEmailStatus.lastSentAt,
+        },
+        docs: compliance.failedDocs
+      });
+    } if (compliance.warningDocs.length > 0) {
+      result.WARNING.push({
+        driver: {
+          name: driver.name,
+          srsDriverNumber: driver.srsDriverNumber,
+          email: driver.email,
+          emailStatus: driver.complianceEmailStatus.lastSentAt,
+        },
+        docs: compliance.warningDocs
+      });
+    }
   }
 
-  if (warningDocs.length > 0) {
-    return { status: "WARNING", docs: warningDocs };
-  }
-
-  return { status: "COMPLIANT", docs: [] };
+  return result;
 };

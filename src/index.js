@@ -12,7 +12,8 @@ import invoiceRoutes from "./app/routes/invoiceRoutes.js";
 import defaultRoutes from "./app/routes/defaultRoutes.js";
 import mailRoutes from "./app/routes/mailRoutes.js";
 import path from "path";
-import "./app/services/cronServices/complianceDrivers.js"
+import "./app/services/cronServices/complianceDriversCron.js"
+import "./app/services/cronServices/complianceManagementCron.js"
 
 
 const app = express();
