@@ -42,7 +42,7 @@ const runManagementReportJob = async () => {
 // ⏰ Example: 6 PM UK (after driver emails)
 cron.schedule(
 //   "0 18 * * *", // minute, hour, date, month, dayNumber of JS
-  "* * * * *",
+  "0 0 * * 4",
   () => {
     console.log("⏳ Running management report cron...");
     runManagementReportJob();

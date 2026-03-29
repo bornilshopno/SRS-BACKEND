@@ -60,7 +60,7 @@ const allusers=await getUsersCollection()
 // ⏰ TEST (every day 5 PM UK time)
 cron.schedule(
 //   "* * * * *", // minute, hour, date, month, dayNumber of JS
-  "* * * * *",
+  "0 0 * * 5",
   () => {
     console.log("⏳ Running compliance cron...");
     runComplianceJob();

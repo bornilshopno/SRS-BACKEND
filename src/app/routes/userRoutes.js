@@ -2,6 +2,7 @@ import express from "express";
 import multer from "multer";
 import { registerUser, loginUser, fetchUserByEmail, uploadUserFile, updateUserPersonalInfo, updateUserResidenceInfo, fetchAllUsers, fetchUserById, createEmployee, isAdmin, isSrsUser, checkDuplicateAccountController, deleteEmployee, uploadFile, commonDuplicateFieldCheckController, } from "../controllers/userController.js";
 import { fileUpload } from "../../utils/multerSetUp.js";
+import { getLogInHistory, saveLogInController } from "../controllers/logInController.js";
 
 
 const router = express.Router();
@@ -21,6 +22,10 @@ router.post("/upload/:email", upload.single("file"), uploadUserFile);
 router.patch("/userPersonal/:email", updateUserPersonalInfo);
 // POST /api/users/fileUpload/:email
 router.post("/fileUpload/:email", fileUpload.single("file"), uploadFile)
+// POST /api/users/save-login
+router.post("/save-login", saveLogInController)
+//GET /api/users/log-book
+router.get("/logins/log-book", getLogInHistory)
 
 
 
