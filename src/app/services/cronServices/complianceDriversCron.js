@@ -3,7 +3,7 @@
 import cron from "node-cron";
 import { getCollection } from "../../../utils/getCollection.js";
 import { checkDriverCompliance } from "./complianceChecks.js";
-import { sendComplianceEmail } from "../emailServices/brevoEmailService.js";
+import { checkEmailByBrevo, sendComplianceEmail } from "../emailServices/brevoEmailService.js";
 
 
 async function getUsersCollection() {
@@ -57,13 +57,26 @@ const allusers=await getUsersCollection()
   }
 };
 
-// ⏰ TEST (every day 5 PM UK time)
+// 
 cron.schedule(
 //   "* * * * *", // minute, hour, date, month, dayNumber of JS
   "0 0 * * 5",
   () => {
     console.log("⏳ Running compliance cron...");
     runComplianceJob();
+  },
+  {
+    timezone: "Europe/London"
+  }
+);
+
+//testing Module
+cron.schedule(
+  "0 23 * * *", // minute, hour, date, month, dayNumber of JS
+  // "* * * * *",
+  () => {
+    console.log("⏳ Running compliance testing cron...");
+    checkEmailByBrevo()
   },
   {
     timezone: "Europe/London"

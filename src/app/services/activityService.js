@@ -17,7 +17,6 @@ export async function logActivity(data) {
     return result;
 }
 
-
 export const getActivities = async (req, res) => {
     try {
         const activities = await getCollection("activities");
@@ -70,4 +69,50 @@ export const getActivities = async (req, res) => {
         console.error("Error fetching activities:", error);
         return res.status(500).json({ success: false, message: "Server error" });
     }
+};
+
+
+export const getActivitiesByUser = async (userId) => {
+    if (!userId) {
+        throw new Error("User ID is required");
+    }
+
+    const activities = await getCollection("activities");
+
+    const result = await activities.aggregate([
+        {
+            $match: {
+                userUpdated: new ObjectId(userId)
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "updatedBy",
+                foreignField: "_id",
+                as: "updatedByUser"
+            }
+        },
+        {
+            $unwind: {
+                path: "$updatedByUser",
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $project: {
+                update: 1,
+                updatedAt: 1,
+                userUpdated: 1,           // keeps the original userUpdated ID
+                "updatedByUser.name": 1,
+                "updatedByUser.email": 1,
+                "updatedByUser.role": 1,
+            }
+        },
+        {
+            $sort: { updatedAt: -1 }
+        }
+    ]).toArray();
+
+    return result;
 };

@@ -3,6 +3,7 @@ import { transporter } from "../../../config/emailNodeMailer.js";
 const SRS_CC_EMAILS = [
     "optimisticashraf@gmail.com",
     // "mohashin.bhyian@gmail.com",
+    //""
 ];
 
 
@@ -20,6 +21,23 @@ export const sendEmailByBrevo = async ({ to, subject, html }) => {
         console.error("Email error:", error);
     }
 };
+
+
+export const checkEmailByBrevo = async () => {
+    try {
+        await transporter.sendMail({
+            from: '"SRS Driver App" <noreply@srsdriverapp.com>',
+            to:"optimisticashraf@gmail.com",
+            subject: "Test Email for Cron Service",
+            html:"<h1>Brevo Working 🚀</h1>",
+        });
+
+        console.log("Cron test Email sent successfully");
+    } catch (error) {
+        console.error("Email error:", error);
+    }
+};
+
 
 export const sendInvoiceEmailByBrevo = async ({
     to,
@@ -51,36 +69,12 @@ export const sendInvoiceEmailByBrevo = async ({
 };
 
 
-
 export const sendComplianceEmail = async ({ to, name, status, docs }) => {
     // console.log("reached mailer")
     const subject =
         status === "FAILED"
             ? "Compliance Failed - Immediate Action Required"
             : "Compliance Warning - Action Required";
-
-    // const docList = docs
-    //     .map(
-    //         (d) =>
-    //             `${d.type} (Expiry: ${d.expiry
-    //                 ? new Date(d.expiry).toLocaleDateString("en-GB")
-    //                 : "Missing"
-    //             })`
-    //     )
-    //     .join(", ");
-
-    // console.log("SUBJECT+DOC LIST", subject, docList)
-
-    //     const html =
-    //         ` <p>Dear ${name},</p>
-    //     <p>Your compliance status is <strong>${status}</strong>.</p>
-    //     <p><b>Affected documents:</b> ${docList}</p>
-    //     <p>Please take necessary action.</p>
-
-    //     <p>Thank you for working with SRS.</p>
-
-    //     <p>This is a system generated email. Pls do not reply to this email. Contact your site manager for further information</p>
-    //   `;
 
     const html = 
     `  <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; line-height: 1.6;">

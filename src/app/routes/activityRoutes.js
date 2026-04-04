@@ -1,12 +1,12 @@
 // routes/termsRoutes.js
 import express from "express";
-
-import { fetchActivities } from "../controllers/activityController.js";
+import { fetchActivities, fetchActivitiesByUser } from "../controllers/activityController.js";
 
 const router = express.Router();
 
 ///api/activity/profileChanges
 router.get("/profileChanges", fetchActivities);
-// router.post("/profileChanges", fetchTerms);
+///api/activity/user/:id
+router.get("/user/:id", fetchActivitiesByUser);
 
 export default router;

@@ -6,11 +6,14 @@ export const saveLogInController = async (req, res) => {
     try {
         const { userId, email, userAgent, } = req.body;
 
-        const ip = req.headers["x-forwarded-for"]?.split(",")[0] ||
-            req.socket.remoteAddress;
+        // const ip = req.headers["x-forwarded-for"]?.split(",")[0] ||
+        //     req.socket.remoteAddress;
+        const ip = req.ip;
         const parser = new UAParser(userAgent);
         const device = parser.getDevice();
         const browser = parser.getBrowser();
+
+        // console.log("req.ip:", req.ip);
 
         const loginDetails = {
             userId,
@@ -33,7 +36,7 @@ export const getLogInHistory = async (req, res) => {
     try {
         const userId = req.query.uid || ''
         const history = await getLogBook(userId)
-   
+
         res.status(200).json(history)
     } catch (error) {
         console.error("Login detail not found", error);
