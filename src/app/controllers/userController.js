@@ -1,7 +1,8 @@
-import { checkAdminStatus, checkDuplicateAccount, checkDuplicateField, checkSrsUser, createUser, deleteEmployeeService, findUserByEmail, getAllUsers, getUserByEmail, getUserById, saveFileUrlToUser, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
+import { checkAdminStatus, checkDuplicateAccount, checkDuplicateField, checkSrsUser, createUser, deleteEmployeeService, deleteFileUpdateService, findUserByEmail, getAllUsers, getUserByEmail, getUserById, saveFileUrlToUser, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
 import generateToken from "../../utils/generateToken.js";
 import { createEmployeeService } from "../services/userService.js";
 import { logActivity } from "../services/activityService.js";
+import { userFileDeleteService } from "../services/fileService/fileService.js";
 
 
 //check done
@@ -105,11 +106,11 @@ export async function uploadFile(req, res) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    
+
     const fileUrl = `/fileUploads/${req.file.filename}`;
 
     const result = await saveFileUrlToUser(fileUrl, fileKey, email);
-console.log("from controller result",fileKey, result)
+    console.log("from controller result", fileKey, result)
     res.status(200).json({
       message: "File uploaded successfully",
       url: fileUrl,
@@ -211,7 +212,7 @@ export const updateUserResidenceInfo = async (req, res) => {
 // app/controllers/userController.js//woriking tested 18/11
 
 export const createEmployee = async (req, res) => {
-  const { name, email, initialKey, phone, role,site } = req.body;
+  const { name, email, initialKey, phone, role, site } = req.body;
   // console.log( "from createEmployee", req.body) 
   // Validation
   if (!email || !initialKey || !role) {
@@ -285,7 +286,7 @@ export const deleteEmployee = async (req, res) => {
     const result = await deleteEmployeeService(email);
 
     res.status(200).json({
-      success:true,
+      success: true,
       message: "User deleted from Firebase and database",
       ...result,
     });
@@ -358,6 +359,47 @@ export const commonDuplicateFieldCheckController = async (req, res) => {
 };
 
 
+export const deleteUserFileController = async (req, res) => {
+  const { docKey, file } = req.body
+  const id = req.params.id
+
+  //Delete requested file
+  const deleteRes = await userFileDeleteService(file)
+  if (deleteRes?.file_delete === "File not found") {
+    return res.status(404).json({
+      success: false,
+      message: "File not found"
+    })
+
+  }
+  if (deleteRes?.file_delete === "Error deleting file") {
+    return res.status(404).json({
+      success: false,
+      message: "File not deleted. Server problem"
+    })
+
+  }
+
+
+  //update user data removing the deleted file
+  const updateRes = await deleteFileUpdateService(id, docKey, file)
+  if (updateRes?.success === true) {
+    return res.status(200).json({
+      success: true,
+      message: "File deleted and updated user successfully",
+    });
+  }
+  else {
+    return res.status(200).json({
+      success: false,
+      message: "File deleted but user not updated accordingly",
+    });
+
+  }
+}
+
+
+
 
 //not checked
 
@@ -381,3 +423,5 @@ export const loginUser = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+
+

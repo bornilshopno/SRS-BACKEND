@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+
 export async function findUserByEmail(email) {
   const userCollection = await getCollection("users");
   return await userCollection.findOne({ email });
@@ -347,7 +348,23 @@ export const checkDuplicateField = async (field, value, excludeId) => {
 };
 
 
+export const deleteFileUpdateService = async (userId, docKey, filePath) => {
 
+  const userCollection = await getCollection("users");
+
+  const res = await userCollection.updateOne(
+    { _id: new ObjectId(userId) },
+    { $pull: { [docKey]: filePath } }
+  );
+
+  console.log("fileDeleteService", res)
+  if (res.modifiedCount > 0) {
+    return {
+      success: true
+    }
+  }
+  return { success: false }
+}
 
 
 
