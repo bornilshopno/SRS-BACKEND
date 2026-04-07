@@ -348,23 +348,65 @@ export const checkDuplicateField = async (field, value, excludeId) => {
 };
 
 
-export const deleteFileUpdateService = async (userId, docKey, filePath) => {
+export const fileRecycleService = async (userId, docKey, filePath) => {
+  const userCollection = await getCollection("users");
+
+ const service= await userCollection.updateOne(
+  { _id: new ObjectId(userId) },
+  {
+    $pull: { [docKey]: filePath },
+    $push: {
+      recycleBin: {
+        _id: new ObjectId(),
+        filePath,
+        docKey,
+        recycledAt: new Date()
+      }
+    }
+  }
+);
+
+return service
+}
+
+export const restoreFromRecycleBin = async ( userId, recycleId, docKey, filePath ) => {
+  // console.log("SERVICE" ,userId, recycleId, docKey, filePath)
+
+ const userCollection = await getCollection("users");
+ const service= await userCollection.updateOne(
+  { _id: new ObjectId(userId) },
+  {
+    $pull: {
+        recycleBin: { _id: new ObjectId(recycleId) }
+      },
+     $addToSet: {
+        [docKey]: filePath
+      }
+  }
+);
+
+return service
+};
+
+export const deleteFromRecycleBin = async (userId, recycleId) => {
 
   const userCollection = await getCollection("users");
 
-  const res = await userCollection.updateOne(
+   const res = await userCollection.updateOne(
     { _id: new ObjectId(userId) },
-    { $pull: { [docKey]: filePath } }
+    {
+      $pull: {
+        recycleBin: { _id: new ObjectId(recycleId) }
+      }
+    }
   );
 
   console.log("fileDeleteService", res)
-  if (res.modifiedCount > 0) {
-    return {
-      success: true
-    }
-  }
-  return { success: false }
+ 
+  return res
 }
+
+
 
 
 

@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { registerUser, loginUser, fetchUserByEmail, uploadUserFile, updateUserPersonalInfo, updateUserResidenceInfo, fetchAllUsers, fetchUserById, createEmployee, isAdmin, isSrsUser, checkDuplicateAccountController, deleteEmployee, uploadFile, commonDuplicateFieldCheckController, deleteUserFileController, } from "../controllers/userController.js";
+import { registerUser, loginUser, fetchUserByEmail, uploadUserFile, updateUserPersonalInfo, updateUserResidenceInfo, fetchAllUsers, fetchUserById, createEmployee, isAdmin, isSrsUser, checkDuplicateAccountController, deleteEmployee, uploadFile, commonDuplicateFieldCheckController,  fileRecycleController, updateRecyleFile, } from "../controllers/userController.js";
 import { fileUpload } from "../../utils/multerSetUp.js";
 import { getLogInHistory, saveLogInController } from "../controllers/logInController.js";
 
@@ -26,8 +26,13 @@ router.post("/fileUpload/:email", fileUpload.single("file"), uploadFile)
 router.post("/save-login", saveLogInController)
 //GET /api/users/log-book
 router.get("/logins/log-book", getLogInHistory)
+
 //PATCH (/api/users/deleteFile)
-router.patch("/deleteFile/:id",deleteUserFileController)
+router.patch("/recycleFile/:id",fileRecycleController)
+
+//PATCH (/api/users/deleteFile)
+router.patch("/recycleFile/update/:id",updateRecyleFile)
+
 
 
 //PATCH /api/users/userResidence/email
