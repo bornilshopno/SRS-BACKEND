@@ -151,6 +151,49 @@ console.log(updateOperation, "update")
   return { updated: updateResult.modifiedCount > 0 };
 }
 
+export async function saveOtherDocumentsToUser(fileUrl, fileKey, id) {
+
+    const userCollection = await getCollection("users");
+
+    // Step 1: fetch existing user data
+    const user = await userCollection.findOne({ _id: new ObjectId(id) });
+    if (!user) throw new Error("User not found");
+
+    console.log('fileKey', fileKey, fileUrl, id)
+
+
+
+    // Step 2: prepare update operation
+
+    let updateOperation;
+
+    const existingValue = user[fileKey];
+
+    if (!existingValue) {
+        // first time → create array
+        updateOperation = { $set: { [fileKey]: [fileUrl] } };
+    }
+    else if (!Array.isArray(existingValue)) {
+        // convert string → array
+        updateOperation = {
+            $set: { [fileKey]: [existingValue, fileUrl] }
+        };
+    }
+    else {
+        // already array
+        updateOperation = {
+            $addToSet: { [fileKey]: fileUrl }
+        };
+    }
+
+
+    console.log(updateOperation, "update")
+
+    // Step 4: update database
+    const updateResult = await userCollection.updateOne({ _id: new ObjectId(id) }, updateOperation);
+    return { updated: updateResult.modifiedCount > 0 };
+}
+
 
 
 export async function removeFileFromUser(fileUrl, fileKey, email) {
