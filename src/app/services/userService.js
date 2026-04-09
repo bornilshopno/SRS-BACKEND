@@ -165,26 +165,11 @@ export async function saveOtherDocumentsToUser(fileUrl, fileKey, id) {
 
     // Step 2: prepare update operation
 
-    let updateOperation;
-
-    const existingValue = user[fileKey];
-
-    if (!existingValue) {
-        // first time → create array
-        updateOperation = { $set: { [fileKey]: [fileUrl] } };
-    }
-    else if (!Array.isArray(existingValue)) {
-        // convert string → array
-        updateOperation = {
-            $set: { [fileKey]: [existingValue, fileUrl] }
-        };
-    }
-    else {
-        // already array
-        updateOperation = {
-            $addToSet: { [fileKey]: fileUrl }
-        };
-    }
+    const updateOperation = {
+       $addToSet: {
+              [`otherDocuments.${fileKey}`]: fileUrl,
+                  },
+                            };
 
 
     console.log(updateOperation, "update")
@@ -449,7 +434,45 @@ export const deleteFromRecycleBin = async (userId, recycleId) => {
   return res
 }
 
+export const deleteFromOtherDocuments = async (userId, docKey, filePath) => {
 
+  const userCollection = await getCollection("users");
+
+   const res = await userCollection.updateOne(
+    { _id: new ObjectId(userId) },
+    {
+      $pull: {
+        [`otherDocuments.${docKey}`]: filePath,
+      },
+    }
+    
+  );
+
+  console.log("fileDeleteService", res)
+ 
+  return res
+}
+
+// export const fileRecycleService = async (userId, docKey, filePath) => {
+//   const userCollection = await getCollection("users");
+
+//  const service= await userCollection.updateOne(
+//   { _id: new ObjectId(userId) },
+//   {
+//     $pull: { [docKey]: filePath },
+//     $push: {
+//       recycleBin: {
+//         _id: new ObjectId(),
+//         filePath,
+//         docKey,
+//         recycledAt: new Date()
+//       }
+//     }
+//   }
+// );
+
+// return service
+// }
 
 
 

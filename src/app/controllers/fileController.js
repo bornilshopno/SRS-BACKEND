@@ -1,4 +1,4 @@
-import { saveOtherDocumentsToUser } from "../services/userService";
+import { saveOtherDocumentsToUser } from "../services/userService.js";
 
 
 
@@ -42,10 +42,11 @@ export async function uploadMultipleFiles(req, res) {
         // 🔥 Save each file
 
         for (const item of combined) {
-          await saveOtherDocumentsToUser(fileUrl, docKey, id);
+          await saveOtherDocumentsToUser(item.fileUrl, item.docKey, id);
         }
 
         res.status(200).json({
+            success:true,
             message: "Files uploaded successfully",
             files: combined,
         });

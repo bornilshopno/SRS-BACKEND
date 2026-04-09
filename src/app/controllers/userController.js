@@ -1,4 +1,4 @@
-import { checkAdminStatus, checkDuplicateAccount, checkDuplicateField, checkSrsUser, createUser, deleteEmployeeService, deleteFromRecycleBin, fileRecycleService, findUserByEmail, getAllUsers, getUserByEmail, getUserById, restoreFromRecycleBin, saveFileUrlToUser, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
+import { checkAdminStatus, checkDuplicateAccount, checkDuplicateField, checkSrsUser, createUser, deleteEmployeeService, deleteFromOtherDocuments, deleteFromRecycleBin, fileRecycleService, findUserByEmail, getAllUsers, getUserByEmail, getUserById, restoreFromRecycleBin, saveFileUrlToUser, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
 import generateToken from "../../utils/generateToken.js";
 import { createEmployeeService } from "../services/userService.js";
 import { logActivity } from "../services/activityService.js";
@@ -359,7 +359,7 @@ export const commonDuplicateFieldCheckController = async (req, res) => {
 };
 
 export const fileRecycleController = async (req, res) => {
-  const { docKey, file } = req.body
+  const { docKey, file, isOtherDocuments } = req.body
   const id = req.params.id
 
   if (!id) {
@@ -370,20 +370,44 @@ export const fileRecycleController = async (req, res) => {
 
   }
 
-  const controller = await fileRecycleService(id, docKey, file)
-  if (controller?.modifiedCount > 0) {
-    return res.status(200).json({
-      success: true,
-      message: "File deleted and updated user successfully",
-    });
-  }
-  else {
-    return res.status(200).json({
-      success: false,
-      message: "File deleted but user not updated accordingly",
-    });
+  if (isOtherDocuments) {
+    console.log("user controller=> It is from other documents", id)
+
+    const deleteOperation = await userFileDeleteService(file)
+    const userUpdate = await deleteFromOtherDocuments(id, docKey, file)
+
+    if (userUpdate?.modifiedCount > 0) {
+      return res.status(200).json({
+        success: true,
+        message: "File deleted from other documents",
+      });
+    }
+
+    else {
+      return res.status(200).json({
+        success: false,
+        message: "File deleted but user not updated accordingly",
+      });
+    }
 
   }
+  else {
+    const controller = await fileRecycleService(id, docKey, file)
+    if (controller?.modifiedCount > 0) {
+      return res.status(200).json({
+        success: true,
+        message: "File deleted and updated user successfully",
+      });
+    }
+    else {
+      return res.status(200).json({
+        success: false,
+        message: "File deleted but user not updated accordingly",
+      });
+
+    }
+  }
+
 }
 
 export const updateRecyleFile = async (req, res) => {
