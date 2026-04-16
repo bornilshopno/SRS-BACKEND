@@ -8,7 +8,6 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
 export async function findUserByEmail(email) {
   const userCollection = await getCollection("users");
   return await userCollection.findOne({ email });
@@ -179,8 +178,6 @@ export async function saveOtherDocumentsToUser(fileUrl, fileKey, id) {
     return { updated: updateResult.modifiedCount > 0 };
 }
 
-
-
 export async function removeFileFromUser(fileUrl, fileKey, email) {
   const userCollection = await getCollection("users");
 
@@ -228,7 +225,6 @@ export const updateUserResidenceService = async (email, updatedDoc) => {
   const result = await userCollection.updateOne(filter, updatedDocument);
   return result;
 }
-
 
 export const createEmployeeService = async ({
   name,
@@ -283,8 +279,6 @@ export const createEmployeeService = async ({
     throw error; // let controller send proper error message
   }
 };
-
-
 
 export const deleteEmployeeService = async (email) => {
   try {
@@ -351,7 +345,6 @@ export const checkDuplicateAccount = async (bankAccountNumber, excludeDriverId) 
   });
 }
 
-
 export const checkDuplicateField = async (field, value, excludeId) => {
   if (!field || !value) {
     return { success: false };
@@ -374,7 +367,6 @@ export const checkDuplicateField = async (field, value, excludeId) => {
     isDuplicate: !!exists
   };
 };
-
 
 export const fileRecycleService = async (userId, docKey, filePath) => {
   const userCollection = await getCollection("users");
@@ -453,26 +445,7 @@ export const deleteFromOtherDocuments = async (userId, docKey, filePath) => {
   return res
 }
 
-// export const fileRecycleService = async (userId, docKey, filePath) => {
-//   const userCollection = await getCollection("users");
 
-//  const service= await userCollection.updateOne(
-//   { _id: new ObjectId(userId) },
-//   {
-//     $pull: { [docKey]: filePath },
-//     $push: {
-//       recycleBin: {
-//         _id: new ObjectId(),
-//         filePath,
-//         docKey,
-//         recycledAt: new Date()
-//       }
-//     }
-//   }
-// );
-
-// return service
-// }
 
 
 

@@ -17,7 +17,7 @@ export const userFileDeleteService = async (filePath) => {
                 file_delete: true,
             });
         } else {
-               console.log("fileNotFOund Deleted", filePath)
+            console.log("fileNotFOund Deleted", filePath)
             return ({
                 file_delete: "File not found",
             });

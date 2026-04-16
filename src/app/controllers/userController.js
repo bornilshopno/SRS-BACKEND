@@ -5,7 +5,7 @@ import { logActivity } from "../services/activityService.js";
 import { userFileDeleteService } from "../services/fileService/fileService.js";
 
 
-//check done
+
 export const registerUser = async (req, res) => {
   try {
     const user = req.body;
@@ -30,8 +30,6 @@ export const registerUser = async (req, res) => {
 };
 
 
-
-//check done
 export const fetchUserByEmail = async (req, res) => {
   try {
     const email = req.params.email;
@@ -47,6 +45,8 @@ export const fetchUserByEmail = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
 export const fetchUserById = async (req, res) => {
   try {
     const id = req.params.id;
@@ -64,7 +64,7 @@ export const fetchUserById = async (req, res) => {
   }
 };
 
-// getAllUsers
+
 export const fetchAllUsers = async (req, res) => {
   try {
     const { search = "", sortBy, role, fromDate, toDate } = req.query;
@@ -75,7 +75,6 @@ export const fetchAllUsers = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
 
 
 export async function uploadUserFile(req, res) {
@@ -96,6 +95,7 @@ export async function uploadUserFile(req, res) {
     res.status(500).json({ error: error.message });
   }
 }
+
 
 export async function uploadFile(req, res) {
   try {
@@ -121,20 +121,6 @@ export async function uploadFile(req, res) {
   }
 }
 
-
-// export const updateUserPersonalInfo = async (req, res) => {
-//   try {
-//     const email = req.params.email;
-//     const updatedDoc = req.body;
-//     console.log("Controller", updatedDoc)
-//     const result = await updateUserPersonalService(email, updatedDoc);
-
-//     res.status(200).send(result);
-//   } catch (error) {
-//     console.error("Error updating user:", error);
-//     res.status(500).send({ message: "Failed to update user", error });
-//   }
-// };
 
 export const updateUserPersonalInfo = async (req, res) => {
   try {
@@ -194,8 +180,6 @@ export const updateUserPersonalInfo = async (req, res) => {
 };
 
 
-
-
 export const updateUserResidenceInfo = async (req, res) => {
   try {
     const email = req.params.email;
@@ -208,9 +192,7 @@ export const updateUserResidenceInfo = async (req, res) => {
 
 }
 
-
 // app/controllers/userController.js//woriking tested 18/11
-
 export const createEmployee = async (req, res) => {
   const { name, email, initialKey, phone, role, site } = req.body;
   // console.log( "from createEmployee", req.body) 
@@ -272,8 +254,6 @@ export const createEmployee = async (req, res) => {
 };
 
 
-//deleteUser
-
 export const deleteEmployee = async (req, res) => {
   console.log("DELETE", req.params)
   try {
@@ -304,7 +284,6 @@ export const deleteEmployee = async (req, res) => {
     });
   }
 };
-
 
 
 export const isAdmin = async (req, res) => {
@@ -343,8 +322,6 @@ export const checkDuplicateAccountController = async (req, res) => {
     res.status(500).send({ error: { message: 'Internal check error' } });
   }
 }
-
-
 export const commonDuplicateFieldCheckController = async (req, res) => {
   try {
     const { field, value, excludeId } = req.query;
@@ -358,6 +335,7 @@ export const commonDuplicateFieldCheckController = async (req, res) => {
   }
 };
 
+
 export const fileRecycleController = async (req, res) => {
   const { docKey, file, isOtherDocuments } = req.body
   const id = req.params.id
@@ -367,12 +345,9 @@ export const fileRecycleController = async (req, res) => {
       success: false,
       message: "DriverId not found",
     });
-
   }
 
   if (isOtherDocuments) {
-    console.log("user controller=> It is from other documents", id)
-
     const deleteOperation = await userFileDeleteService(file)
     const userUpdate = await deleteFromOtherDocuments(id, docKey, file)
 
@@ -382,15 +357,14 @@ export const fileRecycleController = async (req, res) => {
         message: "File deleted from other documents",
       });
     }
-
     else {
       return res.status(200).json({
         success: false,
         message: "File deleted but user not updated accordingly",
       });
     }
-
   }
+
   else {
     const controller = await fileRecycleService(id, docKey, file)
     if (controller?.modifiedCount > 0) {
@@ -404,18 +378,14 @@ export const fileRecycleController = async (req, res) => {
         success: false,
         message: "File deleted but user not updated accordingly",
       });
-
     }
   }
-
 }
 
 export const updateRecyleFile = async (req, res) => {
-
   const { docId, docKey, file, action } = req.body
   const userId = req.params.id
-
-  console.log(userId, "docKey", docId, "docKey", docKey, "file", file, "action", action)
+  // console.log(userId, "docKey", docId, "docKey", docKey, "file", file, "action", action)
 
   if (action === 'RESTORE') {
     const result = await restoreFromRecycleBin(userId, docId, docKey, file)
@@ -430,15 +400,11 @@ export const updateRecyleFile = async (req, res) => {
         success: false,
         message: "File not found in recycle bin",
       });
-
     }
   }
 
   if (action === "DELETE") {
     const deleteOperation = await userFileDeleteService(file)
-
-
-    console.log("DELETE ACTION")
     const result = await deleteFromRecycleBin(userId, docId)
     if (result?.modifiedCount > 0) {
       return res.status(200).json({
@@ -451,44 +417,8 @@ export const updateRecyleFile = async (req, res) => {
         success: false,
         message: "File not found in recycle bin",
       });
-
     }
   }
-  //Delete requested file
-
-  // const deleteRes = await userFileDeleteService(file)
-  // if (deleteRes?.file_delete === "File not found") {
-  //   return res.status(404).json({
-  //     success: false,
-  //     message: "File not found"
-  //   })
-
-  // }
-  // if (deleteRes?.file_delete === "Error deleting file") {
-  //   return res.status(404).json({
-  //     success: false,
-  //     message: "File not deleted. Server problem"
-  //   })
-
-  // }
-
-
-  //update user data removing the deleted file
-
-  // const updateRes = await deleteFileUpdateService(userId, docId)
-  // if (updateRes?.modifiedCount > 0) {
-  //   return res.status(200).json({
-  //     success: true,
-  //     message: "File deleted and updated user successfully",
-  //   });
-  // }
-  // else {
-  //   return res.status(200).json({
-  //     success: false,
-  //     message: "File deleted but user not updated accordingly",
-  //   });
-
-  // }
 }
 
 
