@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
+import { getCollection } from "../utils/getCollection.js";
 
-export const protect = (req, res, next) => {
-  const token = req.cookies?.jwt;
+export const verifyToken = (req, res, next) => {
+  const token = req.cookies?.refreshToken;
   if (!token) return res.status(401).json({ message: "Not authorized, no token" });
 
   try {
@@ -12,3 +13,4 @@ export const protect = (req, res, next) => {
     res.status(401).json({ message: "Token invalid or expired" });
   }
 };
+

@@ -449,11 +449,7 @@ export const deleteFromOtherDocuments = async (userId, docKey, filePath) => {
 
 
 
-// not used yet
-export async function verifyUser(email, password) {
-  // Normally you'd fetch and compare from DB
-  return { id: 1, email };
-}
+
 
 //function re-written
 // export async function saveFileUrlToUser(fileUrl, fileKey, email) {

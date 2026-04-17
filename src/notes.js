@@ -1,3 +1,6 @@
+  accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OTE0NzkwZjVjMDdmNjAxOTQ3ODg2MWIiLCJlbWFpbCI6ImFkbWluQHRlc3QuY29tIiwiaWF0IjoxNzc2Mzk1MDc4LCJleHAiOjE3NzYzOTU5Nzh9.33UdYg614xqP-zI_rxWI_CWSYFFYUdfUJwKE1juDXIU',
+  refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OTE0NzkwZjVjMDdmNjAxOTQ3ODg2MWIiLCJlbWFpbCI6ImFkbWluQHRlc3QuY29tIiwiaWF0IjoxNzc2Mzk1MDc4LCJleHAiOjE3NzY5OTk4Nzh9.4U5kM_FaiSrhC13HfFgG8SeSOap7B9GxFVu8Mu6qL-0'
+
 // package.json=> scripts/start
 
 import { version } from "react";
@@ -32,51 +35,4 @@ res.cookie("jwt", token, {
 });
 
 res.json({ message: "Login successful", token });
-
-
-app.get('api/users/:email', async (req, res) => {
-  const email = req.params.email;
-  const query = { email: email };
-  const currentUser = await userCollection.findOne(query);
-
-  console.log(currentUser)
-  res.send(currentUser);
-})
-
-invoice
-{
-  year,
-    week,
-    driverWiseInvoiceData,
-
-    adjustmentStatus: "PENDING" | "APPLIED" | "FAILED",
-      lastProcessedAt,
-}
-
-loan 
-{
-  loanAmount: 1000,
-  remaining: 900,
-
-  status: "ACTIVE",
-
-  history: [
-    {
-      invoiceId,
-      revision,
-      year,
-      week,
-
-      scheduled: 200,
-      paid: 100,
-
-      delta: -100,
-
-      previousRemaining: 1000,
-      newRemaining: 900,
-
-      createdAt
-    }
-  ]
-}
 

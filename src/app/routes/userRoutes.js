@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { registerUser, loginUser, fetchUserByEmail, uploadUserFile, updateUserPersonalInfo, updateUserResidenceInfo, fetchAllUsers, fetchUserById, createEmployee, isAdmin, isSrsUser, checkDuplicateAccountController, deleteEmployee, uploadFile, commonDuplicateFieldCheckController,  fileRecycleController, updateRecyleFile, } from "../controllers/userController.js";
+import { registerUser, fetchUserByEmail, uploadUserFile, updateUserPersonalInfo, updateUserResidenceInfo, fetchAllUsers, fetchUserById, createEmployee, isAdmin, isSrsUser, checkDuplicateAccountController, deleteEmployee, uploadFile, commonDuplicateFieldCheckController,  fileRecycleController, updateRecyleFile,  } from "../controllers/userController.js";
 import { fileUpload } from "../../utils/multerSetUp.js";
 import { getLogInHistory, saveLogInController } from "../controllers/logInController.js";
 import { uploadMultipleFiles } from "../controllers/fileController.js";
@@ -65,6 +65,6 @@ router.delete("/:email", deleteEmployee);
 
 
 
-router.post("/login", loginUser);
+
 
 export default router;

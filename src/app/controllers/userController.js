@@ -1,5 +1,4 @@
-import { checkAdminStatus, checkDuplicateAccount, checkDuplicateField, checkSrsUser, createUser, deleteEmployeeService, deleteFromOtherDocuments, deleteFromRecycleBin, fileRecycleService, findUserByEmail, getAllUsers, getUserByEmail, getUserById, restoreFromRecycleBin, saveFileUrlToUser, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, verifyUser } from "../services/userService.js";
-import generateToken from "../../utils/generateToken.js";
+import { checkAdminStatus, checkDuplicateAccount, checkDuplicateField, checkSrsUser, createUser, deleteEmployeeService, deleteFromOtherDocuments, deleteFromRecycleBin, fileRecycleService, findUserByEmail, getAllUsers, getUserByEmail, getUserById, restoreFromRecycleBin, saveFileUrlToUser, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, } from "../services/userService.js";
 import { createEmployeeService } from "../services/userService.js";
 import { logActivity } from "../services/activityService.js";
 import { userFileDeleteService } from "../services/fileService/fileService.js";
@@ -426,27 +425,5 @@ export const updateRecyleFile = async (req, res) => {
 
 
 
-//not checked
-
-export const loginUser = async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const user = await verifyUser(email, password);
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
-
-    const token = generateToken(user._id);
-
-    // Store JWT in cookie
-    res.cookie("jwt", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    });
-
-    res.json({ message: "Login successful", token });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-};
 
 

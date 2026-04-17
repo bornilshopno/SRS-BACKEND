@@ -11,6 +11,7 @@ import adjustmentRoutes from "./app/routes/adjustmentRoutes.js";
 import invoiceRoutes from "./app/routes/invoiceRoutes.js";
 import defaultRoutes from "./app/routes/defaultRoutes.js";
 import mailRoutes from "./app/routes/mailRoutes.js";
+import authRoutes from "./app/routes/authRoutes.js";
 import path from "path";
 import "./app/services/cronServices/complianceDriversCron.js"
 import "./app/services/cronServices/complianceManagementCron.js"
@@ -44,6 +45,7 @@ app.use("/loans", loanRoutes);
 app.use('/invoices', invoiceRoutes)
 app.use('/defaults', defaultRoutes)
 app.use('/mailing', mailRoutes)
+app.use('/auths', authRoutes)
 
 //Serve fileUploads as Static Folder
 app.use("/uploads", express.static(path.join(process.cwd(), "fileUploads")));

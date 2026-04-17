@@ -4,3 +4,4 @@ uploads
 .vercel
 serviceAccountKey.json
 fileUploads
+src/notes.js
