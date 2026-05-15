@@ -1,19 +1,29 @@
 //for payment reporting
 export function getFirstWeekBySunday(fromDate) {
   const date = new Date(fromDate);
-  const year= date.getFullYear()
+  // const year = date.getUTCFullYear(); // ✅ FIX
+//testing
+// console.log("RAW fromDate:", fromDate);
+// console.log("Parsed:", new Date(fromDate));
+// console.log("ISO:", new Date(fromDate).toISOString());
+
+
+
 
   // Get first Sunday on or after fromDate
-  const day = date.getDay();
+
+    const day = date.getUTCDay(); // ✅
   const diff = (7 - day) % 7;
   const sunday = new Date(date);
-  sunday.setDate(date.getDate() + diff);
+  sunday.setUTCDate(date.getUTCDate() + diff); // ✅
+
+    const year = sunday.getUTCFullYear(); // ✅ FIX
 
   // First Sunday of the year
-  const yearStart = new Date(sunday.getFullYear(), 0, 1);
+  const yearStart = new Date(Date.UTC(year, 0, 1));
   const firstSundayOfYear = new Date(yearStart);
-  firstSundayOfYear.setDate(
-    yearStart.getDate() + ((7 - yearStart.getDay()) % 7)
+  firstSundayOfYear.setUTCDate(
+    yearStart.getUTCDate() + ((7 - yearStart.getUTCDay()) % 7)
   );
 
   // Calculate week number
@@ -24,8 +34,9 @@ export function getFirstWeekBySunday(fromDate) {
 
   // Week start (Monday)
   const monday = new Date(sunday);
-  monday.setDate(sunday.getDate() - 6);
+  monday.setUTCDate(sunday.getUTCDate() - 6);
 
+  // console.log("weekNumber", weekNumber , "year", year)
   return {
     weekNumber, year
     // weekStart: monday,
@@ -33,20 +44,25 @@ export function getFirstWeekBySunday(fromDate) {
   };
 }
 
+
+
 //for payment reporting
 export function getLastWeekBySunday(toDate) {
   const date = new Date(toDate);
-  const year= date.getFullYear()
+
+
   // Get last Sunday on or before toDate
-  const day = date.getDay();
+  const day = date.getUTCDay();
   const sunday = new Date(date);
-  sunday.setDate(date.getDate() - day);
+  sunday.setUTCDate(date.getUTCDate() - day);
+
+const year = sunday.getUTCFullYear(); // ✅ FIX
 
   // First Sunday of the year
-  const yearStart = new Date(sunday.getFullYear(), 0, 1);
+  const yearStart = new Date(Date.UTC(year, 0, 1));
   const firstSundayOfYear = new Date(yearStart);
-  firstSundayOfYear.setDate(
-    yearStart.getDate() + ((7 - yearStart.getDay()) % 7)
+  firstSundayOfYear.setUTCDate(
+    yearStart.getUTCDate() + ((7 - yearStart.getUTCDay()) % 7)
   );
 
   // Calculate week number
@@ -57,7 +73,9 @@ export function getLastWeekBySunday(toDate) {
 
   // Week start (Monday)
   const monday = new Date(sunday);
-  monday.setDate(sunday.getDate() - 6);
+  monday.setUTCDate(sunday.getUTCDate() - 6);
+
+
 
   return {
     weekNumber, year

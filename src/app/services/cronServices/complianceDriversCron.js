@@ -11,13 +11,13 @@ async function getUsersCollection() {
 }
 
 const runComplianceJob = async () => {
-const allusers=await getUsersCollection()
+  const allusers = await getUsersCollection()
 
   try {
     const drivers = await allusers
       .find({
         role: "driver",
-        isDriverApproved: true,
+        driverStatus: "Active",
         isDriverTerminated: false
       })
       .toArray();
@@ -31,12 +31,12 @@ const allusers=await getUsersCollection()
       if (result.status === "COMPLIANT") continue;
 
 
-    //  const res= await sendComplianceEmail({
-    //     to: driver.email,
-    //     name: driver.name,
-    //     status: result.status,
-    //     docs: [  ...result.failedDocs,  ...result.warningDocs]
-    //   });
+      //  const res= await sendComplianceEmail({
+      //     to: driver.email,
+      //     name: driver.name,
+      //     status: result.status,
+      //     docs: [  ...result.failedDocs,  ...result.warningDocs]
+      //   });
 
 
       // ✅ Update email tracking
@@ -59,7 +59,7 @@ const allusers=await getUsersCollection()
 
 // 
 cron.schedule(
-//   "* * * * *", // minute, hour, date, month, dayNumber of JS
+  //   "* * * * *", // minute, hour, date, month, dayNumber of JS
   "0 0 * * 5",
   () => {
     console.log("⏳ Running compliance cron...");

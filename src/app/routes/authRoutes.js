@@ -4,8 +4,9 @@ import { verifyAdmin } from "../../middleware/roles.js";
 
 const router=express.Router()
 
+//default gateway=> '/auths'
 router.get("/test",verifyAdmin, testingFn);
-router.post("/login", loginUser);
+router.post("/setup", loginUser);
 router.post("/logout", logoutUser);
 router.post("/refresh-token",refreshAccessToken )
 

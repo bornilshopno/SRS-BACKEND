@@ -113,6 +113,7 @@ export async function getLoanService(id) {
         "loanee.srsDriverNumber": 1,
         "loanee.profileImage": 1,
         "loanee.site": 1,
+        "loanee.niNumber": 1,
 
         // UpdatedBy fields
         "updatedByUser.name": 1,

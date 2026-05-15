@@ -12,6 +12,10 @@ import invoiceRoutes from "./app/routes/invoiceRoutes.js";
 import defaultRoutes from "./app/routes/defaultRoutes.js";
 import mailRoutes from "./app/routes/mailRoutes.js";
 import authRoutes from "./app/routes/authRoutes.js";
+import incidentRoutes from "./app/routes/incidentRoutes.js";
+import aahMatrixRoutes from "./app/routes/aahMatrixRoutes.js";
+import siteAuditRoutes from "./app/routes/siteAuditRoutes.js";
+import fileRoutes from "./app/routes/fileRoutes.js";
 import path from "path";
 import "./app/services/cronServices/complianceDriversCron.js"
 import "./app/services/cronServices/complianceManagementCron.js"
@@ -46,9 +50,14 @@ app.use('/invoices', invoiceRoutes)
 app.use('/defaults', defaultRoutes)
 app.use('/mailing', mailRoutes)
 app.use('/auths', authRoutes)
+app.use("/incidents", incidentRoutes)
+app.use("/aah-matrix", aahMatrixRoutes)
+app.use("/site-audits", siteAuditRoutes)
+app.use("/check-and-get",fileRoutes)
 
 //Serve fileUploads as Static Folder
 app.use("/uploads", express.static(path.join(process.cwd(), "fileUploads")));
+
 
 // Root route
 app.get("/", (req, res) => {

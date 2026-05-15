@@ -1,9 +1,11 @@
 import { ObjectId } from "mongodb";
 import cloudinary from "../../config/cloudinaryConfig.js";
 import { getCollection } from "../../utils/getCollection.js";
-import fs from "fs";
+import fs from "fs/promises"; // for local file deletion
 import path from "path";
 import { fileURLToPath } from "url";
+import { sendPasswordResetEmailByBrevo } from "./emailServices/brevoEmailService.js";
+import { firebaseAuth } from "../../config/firebaseAdmin.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,14 +32,26 @@ export async function getUserById(id) {
   const userCollection = await getCollection("users");
   const query = { _id: new ObjectId(id) };
   const user = await userCollection.findOne(query);
-  return user;
+  return  {
+    ...user,
+    fullName: [
+      user.firstName,
+      user.middleName,
+      user.lastName,
+    ]
+      .filter(Boolean)
+      .join(" "), //helps avoid extra spaces if middleName is missing.
+  };
 }
 
-export async function getAllUsers({ search, sortBy, role, fromDate, toDate }) {
+export async function getAllUsers({ search = "", sortBy, role, fromDate, toDate }) {
   const userCollection = await getCollection("users");
 
   let query = {
     $or: [
+      { firstName: { $regex: search, $options: "i" } },
+      { middleName: { $regex: search, $options: "i" } },
+      { lastName: { $regex: search, $options: "i" } },
       { name: { $regex: search, $options: "i" } },
       { email: { $regex: search, $options: "i" } },
       { phone: { $regex: search, $options: "i" } },
@@ -57,16 +71,28 @@ export async function getAllUsers({ search, sortBy, role, fromDate, toDate }) {
 
   let cursor = userCollection.find(query);
 
+  const users = await cursor.toArray();
+
   // Sorting
   if (sortBy) cursor = cursor.sort({ [sortBy]: 1 });
 
-  return await cursor.toArray();
+  // Add fullName dynamically
+  return users.map((user) => ({
+    ...user,
+    fullName: [
+      user.firstName,
+      user.middleName,
+      user.lastName,
+    ]
+      .filter(Boolean)
+      .join(" "), //helps avoid extra spaces if middleName is missing.
+  }));
 }
 
 
 export async function uploadFileAndSaveToUser(filePath, filekey, email) {
   const userCollection = await getCollection("users");
-  console.log("fromService, fileKey")
+  // console.log("fromService, fileKey")
   try {
     // 1️⃣ Upload to Cloudinary
     const result = await cloudinary.uploader.upload(filePath, {
@@ -90,15 +116,15 @@ export async function uploadFileAndSaveToUser(filePath, filekey, email) {
   }
 }
 
-export async function saveFileUrlToUser(fileUrl, fileKey, email) {
-  
+export async function saveFileUrlToUser(fileUrl, fileKey, id) {
+
   const userCollection = await getCollection("users");
 
   // Step 1: fetch existing user data
-  const user = await userCollection.findOne({ email });
+  const user = await userCollection.findOne({ _id: new ObjectId(id) });
   if (!user) throw new Error("User not found");
 
-  console.log('fileKey', fileKey, fileUrl,email)
+  // console.log('fileKey', fileKey)
 
   // Step 2: delete previous file if it's a single-value field
   if ((fileKey === "signature" || fileKey === "profileImage") && user[fileKey]) {
@@ -114,68 +140,68 @@ export async function saveFileUrlToUser(fileUrl, fileKey, email) {
 
   // Step 3: prepare update operation
 
-let updateOperation;
+  let updateOperation;
 
-if (fileKey === "signature" || fileKey === "profileImage") {
-  updateOperation = { $set: { [fileKey]: fileUrl } };
-} else {
-  const existingValue = user[fileKey];
+  if (fileKey === "signature" || fileKey === "profileImage") {
+    updateOperation = { $set: { [fileKey]: fileUrl } };
+  } else {
+    const existingValue = user[fileKey];
 
-  if (!existingValue) {
-    // first time → create array
-    updateOperation = { $set: { [fileKey]: [fileUrl] } };
-  } 
-  else if (!Array.isArray(existingValue)) {
-    // convert string → array
-    updateOperation = { 
-      $set: { [fileKey]: [existingValue, fileUrl] } 
-    };
-  } 
-  else {
-    // already array
-    updateOperation = { 
-      $addToSet: { [fileKey]: fileUrl } 
-    };
+    if (!existingValue) {
+      // first time → create array
+      updateOperation = { $set: { [fileKey]: [fileUrl] } };
+    }
+    else if (!Array.isArray(existingValue)) {
+      // convert string → array
+      updateOperation = {
+        $set: { [fileKey]: [existingValue, fileUrl] }
+      };
+    }
+    else {
+      // already array
+      updateOperation = {
+        $addToSet: { [fileKey]: fileUrl }
+      };
+    }
   }
-}
 
 
 
 
 
-console.log(updateOperation, "update")
+  // console.log(updateOperation, "update")
 
   // Step 4: update database
-  const updateResult = await userCollection.updateOne({ email }, updateOperation);
+  const updateResult = await userCollection.updateOne({ _id: new ObjectId(id) }, updateOperation);
   return { updated: updateResult.modifiedCount > 0 };
 }
-
+// new file
 export async function saveOtherDocumentsToUser(fileUrl, fileKey, id) {
 
-    const userCollection = await getCollection("users");
+  const userCollection = await getCollection("users");
 
-    // Step 1: fetch existing user data
-    const user = await userCollection.findOne({ _id: new ObjectId(id) });
-    if (!user) throw new Error("User not found");
+  // Step 1: fetch existing user data
+  const user = await userCollection.findOne({ _id: new ObjectId(id) });
+  if (!user) throw new Error("User not found");
 
-    console.log('fileKey', fileKey, fileUrl, id)
-
-
-
-    // Step 2: prepare update operation
-
-    const updateOperation = {
-       $addToSet: {
-              [`otherDocuments.${fileKey}`]: fileUrl,
-                  },
-                            };
+  // console.log('fileKey', fileKey, fileUrl, id)
 
 
-    console.log(updateOperation, "update")
 
-    // Step 4: update database
-    const updateResult = await userCollection.updateOne({ _id: new ObjectId(id) }, updateOperation);
-    return { updated: updateResult.modifiedCount > 0 };
+  // Step 2: prepare update operation
+
+  const updateOperation = {
+    $addToSet: {
+      [`otherDocuments.${fileKey}`]: fileUrl,
+    },
+  };
+
+
+  // console.log(updateOperation, "update")
+
+  // Step 4: update database
+  const updateResult = await userCollection.updateOne({ _id: new ObjectId(id) }, updateOperation);
+  return { updated: updateResult.modifiedCount > 0 };
 }
 
 export async function removeFileFromUser(fileUrl, fileKey, email) {
@@ -231,26 +257,41 @@ export const createEmployeeService = async ({
   email,
   initialKey,
   phone,
-  role,site,
+  role, site,
 }) => {
+  const userCollection = await getCollection("users");
+
+  const existingUser = await userCollection.findOne({
+    email: email.toLowerCase().trim()
+  });
+
+  if (existingUser) {
+    console.log("found existing")
+    const err = new Error("email-already-registered-user");
+    err.statusCode = 400;
+    throw err;
+  }
+
+
   let userRecord;
 
   try {
+    console.log("from inside firebase", email)
     // 1. Create Firebase Auth user (only email + password required)
-    userRecord = await firebaseAuth.createUser({
+    userRecord = await firebaseAuth().createUser({
       email: email.toLowerCase().trim(),
       password: initialKey,
     });
 
     // 2. Save to MongoDB (raw driver — no Mongoose)
     const userCollection = await getCollection("users");
-    console.log("from create driver", initialKey)
+    // console.log("from create driver", initialKey)
     const result = await userCollection.insertOne({
       uid: userRecord.uid,
       name: name.trim(),
       email: email.toLowerCase().trim(),
       phone: phone?.trim() || "",
-      role,site,
+      role, site,
       initialKey,
       createdAt: new Date(),
     });
@@ -269,7 +310,7 @@ export const createEmployeeService = async ({
     // Optional cleanup: delete Firebase user if MongoDB failed
     if (userRecord?.uid && !error.code?.includes("email-already-exists")) {
       try {
-        await firebaseAuth.deleteUser(userRecord.uid);
+        await firebaseAuth().deleteUser(userRecord.uid);
         console.log("Cleaned up orphaned Firebase user:", userRecord.uid);
       } catch (cleanupError) {
         console.error("Cleanup failed:", cleanupError.message);
@@ -285,10 +326,10 @@ export const deleteEmployeeService = async (email) => {
     const normalizedEmail = email.toLowerCase().trim();
 
     // 1️⃣ Get Firebase user by email
-    const firebaseUser = await firebaseAuth.getUserByEmail(normalizedEmail);
+    const firebaseUser = await firebaseAuth().getUserByEmail(normalizedEmail);
 
     // 2️⃣ Delete Firebase Auth user FIRST
-    await firebaseAuth.deleteUser(firebaseUser.uid);
+    await firebaseAuth().deleteUser(firebaseUser.uid);
 
     // 3️⃣ Delete user profile from MongoDB
     const userCollection = await getCollection("users");
@@ -311,7 +352,7 @@ export const checkAdminStatus = async (email) => {
   const query = { email };
   const userCollection = await getCollection("users");
   const user = await userCollection.findOne(query);
-  console.log(user.role, "admin role")
+  // console.log(user.role, "admin role")
   // Return true only if user exists and role is exactly "admin"
   return user?.role === 'superAdmin';
 };
@@ -321,7 +362,7 @@ export const checkSrsUser = async (email) => {
   const userCollection = await getCollection("users");
   const user = await userCollection.findOne(query);
   const allowedRoles = ["siteManager", "payrollManager", "fleetManager", "superAdmin"];
-  console.log("from userService",user?.role)
+  // console.log("from userService",user?.role)
   return user != null && allowedRoles.includes(user.role);
 };
 
@@ -339,7 +380,7 @@ export const checkDuplicateAccount = async (bankAccountNumber, excludeDriverId) 
 
   const exists = await userCollection.findOne(query);
 
- return({
+  return ({
     success: true,
     isDuplicate: !!exists,
   });
@@ -357,7 +398,7 @@ export const checkDuplicateField = async (field, value, excludeId) => {
   };
 
   if (excludeId) {
-    query._id = { $ne: excludeId };
+    query._id = { $ne: new ObjectId(excludeId) };
   }
 
   const exists = await userCollection.findOne(query);
@@ -371,48 +412,48 @@ export const checkDuplicateField = async (field, value, excludeId) => {
 export const fileRecycleService = async (userId, docKey, filePath) => {
   const userCollection = await getCollection("users");
 
- const service= await userCollection.updateOne(
-  { _id: new ObjectId(userId) },
-  {
-    $pull: { [docKey]: filePath },
-    $push: {
-      recycleBin: {
-        _id: new ObjectId(),
-        filePath,
-        docKey,
-        recycledAt: new Date()
+  const service = await userCollection.updateOne(
+    { _id: new ObjectId(userId) },
+    {
+      $pull: { [docKey]: filePath },
+      $push: {
+        recycleBin: {
+          _id: new ObjectId(),
+          filePath,
+          docKey,
+          recycledAt: new Date()
+        }
       }
     }
-  }
-);
+  );
 
-return service
+  return service
 }
 
-export const restoreFromRecycleBin = async ( userId, recycleId, docKey, filePath ) => {
+export const restoreFromRecycleBin = async (userId, recycleId, docKey, filePath) => {
   // console.log("SERVICE" ,userId, recycleId, docKey, filePath)
 
- const userCollection = await getCollection("users");
- const service= await userCollection.updateOne(
-  { _id: new ObjectId(userId) },
-  {
-    $pull: {
+  const userCollection = await getCollection("users");
+  const service = await userCollection.updateOne(
+    { _id: new ObjectId(userId) },
+    {
+      $pull: {
         recycleBin: { _id: new ObjectId(recycleId) }
       },
-     $addToSet: {
+      $addToSet: {
         [docKey]: filePath
       }
-  }
-);
+    }
+  );
 
-return service
+  return service
 };
 
 export const deleteFromRecycleBin = async (userId, recycleId) => {
 
   const userCollection = await getCollection("users");
 
-   const res = await userCollection.updateOne(
+  const res = await userCollection.updateOne(
     { _id: new ObjectId(userId) },
     {
       $pull: {
@@ -421,8 +462,8 @@ export const deleteFromRecycleBin = async (userId, recycleId) => {
     }
   );
 
-  console.log("fileDeleteService", res)
- 
+  // console.log("fileDeleteService", res)
+
   return res
 }
 
@@ -430,50 +471,117 @@ export const deleteFromOtherDocuments = async (userId, docKey, filePath) => {
 
   const userCollection = await getCollection("users");
 
-   const res = await userCollection.updateOne(
+  const res = await userCollection.updateOne(
     { _id: new ObjectId(userId) },
     {
       $pull: {
         [`otherDocuments.${docKey}`]: filePath,
       },
     }
-    
+
   );
 
-  console.log("fileDeleteService", res)
- 
+  // console.log("fileDeleteService", res)
+
   return res
 }
 
-
-
-
-
-
-
-//function re-written
-// export async function saveFileUrlToUser(fileUrl, fileKey, email) {
+// export const checkDBforReset = async (email) => {
+//   const query = { email };
 //   const userCollection = await getCollection("users");
+//   const user = await userCollection.findOne(query);
+//   if (!user) {
+//     return ({
+//       srsUser: false,
+//       note: `User information not found with ${email}`
+//     })
+//   }
+//   const allowedRoles = ["siteManager", "payrollManager", "fleetManager", "superAdmin"];
+//   // console.log("from userService",user?.role)
+//   if (user != null && !allowedRoles.includes(user.role)) {
+//     return ({
+//       srsUser: false,
+//       note: `Sorry, Password resetting is allowed for Site Manager, Payroll Manager, Fleet Manager and Super Admin Only!`
+//     })
+//   }
+//   if (user != null && allowedRoles.includes(user.role)) {
+//     return ({
+//       srsUser: true
+//     })
+//   }
 
-//   let updateOperation;
-
-  
-//   if (fileKey === "signature" || fileKey === "profileImage") {
-//     updateOperation = { $set: { [fileKey]: fileUrl } }; // Single-value fields (replace existing)
-//   } 
-  
 //   else {
-//     updateOperation = { $addToSet: { [fileKey]: fileUrl } }; // Multi-file fields (store as array)
+//     return (
+//       {
+//         srsUser: false,
+//         note: "Server Error"
+//       }
+//     )
 //   }
+// };
 
-//   const updateResult = await userCollection.updateOne(
-//     { email },
-//     updateOperation
-//   );
+export const checkAndSendResetMail = async (email) => {
+  try {
+    const userCollection = await getCollection("users");
+    const user = await userCollection.findOne({ email });
 
-//   if (updateResult.matchedCount === 0) {
-//     throw new Error("User not found");
-//   }
+    const now = Date.now();
 
-//   return { updated: updateResult.modifiedCount > 0 };
-// }
+    if (
+      user?.passwordResetMailAt &&
+      now - user.passwordResetMailAt < 2 * 60 * 1000 // 2 minutes
+    ) {
+      return {
+        success: true,
+        message: "If eligible, a reset link has been sent.",
+      };
+    }
+
+    const allowedRoles = [
+      "siteManager",
+      "payrollManager",
+      "fleetManager",
+      "superAdmin",
+    ];
+
+    if (user && allowedRoles.includes(user.role)) {
+      try {
+        // ✅ Ensure user exists in Firebase
+        await firebaseAuth().getUserByEmail(email);
+        // ✅ Generate Firebase reset link
+        const resetLink =
+          await firebaseAuth().generatePasswordResetLink(email, {
+            url: "https://srsdriverapp.com/",
+          });
+
+
+        // 👉 send this link via email (Brevo / Nodemailer)
+        await sendPasswordResetEmailByBrevo({
+          email,
+          resetLink,
+        });
+
+        await userCollection.updateOne(
+          { email },
+          { $set: { passwordResetMailAt: Date.now() } },
+        );
+
+      } catch (err) {
+        console.error("Firebase reset error:", err, "email :", email);
+      }
+    }
+
+    // 🔐 Always same response
+    return {
+      success: true,
+      message: "If eligible, a reset link has been sent.",
+    };
+
+  } catch (error) {
+    console.error("Reset check error:", error);
+    return {
+      success: true,
+      message: "If eligible, a reset link has been sent.",
+    };
+  }
+};

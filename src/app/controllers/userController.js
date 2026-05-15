@@ -1,4 +1,4 @@
-import { checkAdminStatus, checkDuplicateAccount, checkDuplicateField, checkSrsUser, createUser, deleteEmployeeService, deleteFromOtherDocuments, deleteFromRecycleBin, fileRecycleService, findUserByEmail, getAllUsers, getUserByEmail, getUserById, restoreFromRecycleBin, saveFileUrlToUser, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, } from "../services/userService.js";
+import { checkAdminStatus, checkAndSendResetMail, checkDuplicateAccount, checkDuplicateField, checkSrsUser, createUser, deleteEmployeeService, deleteFromOtherDocuments, deleteFromRecycleBin, fileRecycleService, findUserByEmail, getAllUsers, getUserByEmail, getUserById, restoreFromRecycleBin, saveFileUrlToUser, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, } from "../services/userService.js";
 import { createEmployeeService } from "../services/userService.js";
 import { logActivity } from "../services/activityService.js";
 import { userFileDeleteService } from "../services/fileService/fileService.js";
@@ -9,7 +9,7 @@ export const registerUser = async (req, res) => {
   try {
     const user = req.body;
     const existingUser = await findUserByEmail(user.email);
-    console.log(existingUser)
+    // console.log(existingUser)
     if (existingUser) {
       return res.status(200).json({
         message: "Previously Registered User",
@@ -49,7 +49,7 @@ export const fetchUserByEmail = async (req, res) => {
 export const fetchUserById = async (req, res) => {
   try {
     const id = req.params.id;
-    console.log("id", id)
+    // console.log("id", id)
     const user = await getUserById(id);
 
     if (!user) {
@@ -67,7 +67,7 @@ export const fetchUserById = async (req, res) => {
 export const fetchAllUsers = async (req, res) => {
   try {
     const { search = "", sortBy, role, fromDate, toDate } = req.query;
-    console.log("reached controller", "role", role)
+    // console.log("reached controller", "role", role)
     const users = await getAllUsers({ search, sortBy, role, fromDate, toDate });
     res.status(200).json(users);
   } catch (error) {
@@ -78,7 +78,7 @@ export const fetchAllUsers = async (req, res) => {
 
 export async function uploadUserFile(req, res) {
   try {
-    console.log(req.file)
+    // console.log(req.file)
     const email = req.params.email;
     const filePath = req.file.path;
     const fileKey = req.body.docKey
@@ -98,18 +98,36 @@ export async function uploadUserFile(req, res) {
 
 export async function uploadFile(req, res) {
   try {
-    const email = req.params.email;
+    const id = req.params.id;
     const fileKey = req.body.docKey;
+
+    // ✅ safely parse activityDoc
+    let activityDoc = null;
 
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
+    // const fileUrl = `${req.protocol}://${req.get("host")}/api/uploads/${req.file.filename}`;
+    // const fileUrl = `/fileUploads/${req.file.filename}`;
 
-    const fileUrl = `/fileUploads/${req.file.filename}`;
+//temporary ❌❌❌❌❌❌
+    const fileUrl = `/fileUploads/${id}/${req.file.filename}`;
 
-    const result = await saveFileUrlToUser(fileUrl, fileKey, email);
-    console.log("from controller result", fileKey, result)
+    const result = await saveFileUrlToUser(fileUrl, fileKey, id);
+
+
+    if (result?.updated) {
+      if (req.body.activityDoc) {
+        try {
+          activityDoc = JSON.parse(req.body.activityDoc);
+          const result = await logActivity(activityDoc);
+        } catch (err) {
+          return res.status(400).json({ error: "Invalid activityDoc JSON" });
+        }
+      }
+    }
+
     res.status(200).json({
       message: "File uploaded successfully",
       url: fileUrl,
@@ -154,7 +172,7 @@ export const updateUserPersonalInfo = async (req, res) => {
       try {
 
         await logActivity(activityDoc);
-        console.log("Activity logged successfully");
+        // console.log("Activity logged successfully");
       } catch (logError) {
         console.error("Failed to log activity (but user was updated):", logError);
         // We don't fail the whole request just because logging failed
@@ -194,7 +212,7 @@ export const updateUserResidenceInfo = async (req, res) => {
 // app/controllers/userController.js//woriking tested 18/11
 export const createEmployee = async (req, res) => {
   const { name, email, initialKey, phone, role, site } = req.body;
-  // console.log( "from createEmployee", req.body) 
+  // console.log("from createEmployee", req.body)
   // Validation
   if (!email || !initialKey || !role) {
     return res.status(400).json({
@@ -232,7 +250,7 @@ export const createEmployee = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Create employee error:", error.message || error);
+
 
     if (error.code?.startsWith("auth/")) {
       const msg =
@@ -245,6 +263,10 @@ export const createEmployee = async (req, res) => {
       return res.status(400).json({ success: false, message: msg || error.message });
     }
 
+    if (error.message === "email-already-registered-user") {
+      return res.status(400).json({ success: false, message: "This email is already registered" });
+    }
+    console.error("Create employee error:", error.message || error,"While registering :",email, "at :", new Date());
     return res.status(500).json({
       success: false,
       message: "Server error — please try again",
@@ -254,7 +276,7 @@ export const createEmployee = async (req, res) => {
 
 
 export const deleteEmployee = async (req, res) => {
-  console.log("DELETE", req.params)
+  // console.log("DELETE", req.params)
   try {
     const { email } = req.params;
 
@@ -336,7 +358,7 @@ export const commonDuplicateFieldCheckController = async (req, res) => {
 
 
 export const fileRecycleController = async (req, res) => {
-  const { docKey, file, isOtherDocuments } = req.body
+  const { docKey, file, isOtherDocuments, activityDoc } = req.body
   const id = req.params.id
 
   if (!id) {
@@ -345,12 +367,15 @@ export const fileRecycleController = async (req, res) => {
       message: "DriverId not found",
     });
   }
-
+  //Direct deletion for other documents
   if (isOtherDocuments) {
     const deleteOperation = await userFileDeleteService(file)
     const userUpdate = await deleteFromOtherDocuments(id, docKey, file)
 
     if (userUpdate?.modifiedCount > 0) {
+      if (activityDoc) {
+        await logActivity(activityDoc)
+      }
       return res.status(200).json({
         success: true,
         message: "File deleted from other documents",
@@ -363,10 +388,13 @@ export const fileRecycleController = async (req, res) => {
       });
     }
   }
-
+  //send to recycle bin
   else {
     const controller = await fileRecycleService(id, docKey, file)
     if (controller?.modifiedCount > 0) {
+      if (activityDoc) {
+        await logActivity(activityDoc)
+      }
       return res.status(200).json({
         success: true,
         message: "File deleted and updated user successfully",
@@ -382,13 +410,15 @@ export const fileRecycleController = async (req, res) => {
 }
 
 export const updateRecyleFile = async (req, res) => {
-  const { docId, docKey, file, action } = req.body
+  const { docId, docKey, file, action, activityDoc } = req.body
   const userId = req.params.id
-  // console.log(userId, "docKey", docId, "docKey", docKey, "file", file, "action", action)
 
   if (action === 'RESTORE') {
     const result = await restoreFromRecycleBin(userId, docId, docKey, file)
     if (result?.modifiedCount > 0) {
+      if (activityDoc) {
+        await logActivity(activityDoc)
+      }
       return res.status(200).json({
         success: true,
         message: "File restored from recycle bin",
@@ -404,11 +434,14 @@ export const updateRecyleFile = async (req, res) => {
 
   if (action === "DELETE") {
     const deleteOperation = await userFileDeleteService(file)
-    const result = await deleteFromRecycleBin(userId, docId)
-    if (result?.modifiedCount > 0) {
+    const updateUserRes = await deleteFromRecycleBin(userId, docId)
+    if (updateUserRes?.modifiedCount > 0) {
+      if (activityDoc) {
+        await logActivity(activityDoc)
+      }
       return res.status(200).json({
         success: true,
-        message: "File restored from recycle bin",
+        message: "File deleted from recycle bin",
       });
     }
     else {
@@ -420,10 +453,14 @@ export const updateRecyleFile = async (req, res) => {
   }
 }
 
-
-
-
-
-
-
+export const checkResetOption = async (req, res) => {
+  try {
+    const email = req.body.email;
+    const result = await checkAndSendResetMail(email);
+    return res.status(200).json(result)
+  } catch (error) {
+    console.error('Error check reset option:', error);
+    res.status(500).send({ error: 'Internal server error' });
+  }
+};
 

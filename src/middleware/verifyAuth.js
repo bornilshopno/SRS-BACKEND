@@ -12,6 +12,7 @@ const verifyAuth = (allowedRoles = []) => {
         try {
             // ✅ 1. Get token from cookie
             const token = req.cookies?.accessToken;
+            // console.log("Received Token")
 
             if (!token) {
                 return res.status(401).json({ message: "Unauthorized: No token" });
@@ -19,15 +20,17 @@ const verifyAuth = (allowedRoles = []) => {
 
             // ✅ 2. Verify JWT
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+            // console.log("verifyAuth decoded req from email :", decoded.email)
             // decoded: { id, email, role }
 
             // ✅ 3. Fetch user from DB (IMPORTANT)
             const userCollection = await getCollection("users");
 
             const user = await userCollection.findOne({
-                _id: new ObjectId(decoded._id),
+                _id: new ObjectId(decoded.id),
             });
+
+            console.log("verifyAuth-User Found :", user.role)
 
             if (!user) {
                 return res.status(401).json({ message: "User not found" });

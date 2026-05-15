@@ -1,7 +1,7 @@
 import express from "express";
 
 
-import { addSiteToDefaults, checkDuplicateSite, editExistingSite, getAllDefaults } from "../controllers/defaultsController.js";
+import { addSiteToDefaults, checkDuplicateSite,  deleteSite,  editExistingSite, getAllDefaults, siteUsageController } from "../controllers/defaultsController.js";
 
 const router = express.Router();
 
@@ -13,5 +13,9 @@ router.get("/check-duplicate-site",checkDuplicateSite)
 router.patch("/add-Site", addSiteToDefaults)
 ////api/defaults/edit-Site
 router.patch("/edit-Site", editExistingSite)
+////api/defaults/edit-Site
+router.patch("/delete-Site", deleteSite)
+//api/defaults/site/checkusuage?site="value"
+router.get("/site/check-usuage", siteUsageController)
 
 export default router;

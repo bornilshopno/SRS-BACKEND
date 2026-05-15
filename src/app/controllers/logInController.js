@@ -1,10 +1,11 @@
 import { UAParser } from "ua-parser-js";
-import { getLogBook, saveLogInInfo } from "../services/logInService.js";
+import { getLogBook, saveLogInInfo, updateLogInService } from "../services/logInService.js";
 
 
 export const saveLogInController = async (req, res) => {
     try {
-        const { userId, email, userAgent, } = req.body;
+        const { userId, email, userAgent, token } = req.body;
+        // console.log(req.body)
 
         // const ip = req.headers["x-forwarded-for"]?.split(",")[0] ||
         //     req.socket.remoteAddress;
@@ -29,6 +30,28 @@ export const saveLogInController = async (req, res) => {
     } catch (error) {
         console.error("Login Detail not Saved", error);
         res.status(500).send({ error: { message: "Internal save error" } });
+    }
+}
+
+export const updateLogInDetails = async (userId, email, userAgent, ip) => {
+    try {
+        const parser = new UAParser(userAgent);
+        const device = parser.getDevice();
+        const browser = parser.getBrowser();
+
+        // console.log("req.ip:", req.ip);
+
+        const loginDetails = {
+            userId,
+            email,
+            device,
+            browser,
+            ip,
+            loginTime: Date.now()
+        }
+        await updateLogInService(loginDetails)
+    } catch (error) {
+        console.error("Login Detail not Saved", error);
     }
 }
 

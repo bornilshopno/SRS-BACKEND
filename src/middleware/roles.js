@@ -17,4 +17,10 @@ export const verifyManager = verifyAuth([
     "siteManager",
 ]);
 
-export const verifyDriver = verifyAuth(["driver"]);
+export const verifyDriver = verifyAuth([
+    "driver",
+    "superAdmin",
+    "fleetManager",
+    "payrollManager",
+    "siteManager",
+]);

@@ -1,4 +1,4 @@
-import { addSiteService, checkSiteService, editSiteService, getDefaultsService } from "../services/defaultService.js";
+import { addSiteService, checkSiteService, checkSiteUsage, deleteSiteService, editSiteService, getDefaultsService } from "../services/defaultService.js";
 
 
 export const getAllDefaults = async (req, res) => {
@@ -20,7 +20,7 @@ export const checkDuplicateSite = async (req, res) => {
     const newValue = req.query.newValue
     const newLabel = req.query.newLabel
 
-    const result = await checkSiteService(newLabel, "newValue")
+    const result = await checkSiteService(newLabel, newValue)
     return res.status(200).json(result);
   } catch (error) {
     console.error(error);
@@ -39,13 +39,35 @@ export const addSiteToDefaults = async (req, res) => {
   }
 }
 
-export const editExistingSite=async(req,res)=>{
-    try {
+export const editExistingSite = async (req, res) => {
+  try {
     const updatedSite = req.body
     const result = await editSiteService(updatedSite)
     return res.status(200).json(result);
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
+export const siteUsageController = async (req, res) => {
+  try {
+    const siteValue = req.query.site
+    const result = await checkSiteUsage(siteValue)
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("error :", error, "at", new Date());
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
+export const deleteSite = async (req, res) => {
+  try {
+    const deletedSite = req.body.site
+    const result = await deleteSiteService(deletedSite)
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("error :", error, "at", new Date());
     res.status(500).json({ message: "Server error" });
   }
 }
