@@ -3,12 +3,17 @@ import { getActivities, getActivitiesByUser, getActivitiesRevised } from "../ser
 
 
 export const fetchActivities = async (req, res) => {
+  console.log("reaced")
   try {
     const { site, fromDate, toDate } = req.query;
+
+    console.log(req.query)
     const activities = await getActivitiesRevised(site, fromDate, toDate);
     if (!activities) {
       return res.status(404).json({ message: "Activities not found" });
     }
+
+    console.log("activitis", activities)
 
     return res.status(200).json({
       success: true,

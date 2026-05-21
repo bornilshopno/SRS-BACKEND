@@ -1,4 +1,4 @@
-import { checkAdminStatus, checkAndSendResetMail, checkDuplicateAccount, checkDuplicateField, checkSrsUser, createUser, deleteEmployeeService, deleteFromOtherDocuments, deleteFromRecycleBin, fileRecycleService, findUserByEmail, getAllUsers, getUserByEmail, getUserById, restoreFromRecycleBin, saveFileUrlToUser, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, } from "../services/userService.js";
+import { checkAdminStatus, checkAndSendResetMail, checkDuplicateAccount, checkDuplicateField, checkOverViewStats, checkSrsUser, createUser, deleteEmployeeService, deleteFromOtherDocuments, deleteFromRecycleBin, fileRecycleService, findUserByEmail, getAllUsers, getUserByEmail, getUserById, restoreFromRecycleBin, saveFileUrlToUser, serveAllUsers, updateUserPersonalService, updateUserResidenceService, uploadFileAndSaveToUser, } from "../services/userService.js";
 import { createEmployeeService } from "../services/userService.js";
 import { logActivity } from "../services/activityService.js";
 import { userFileDeleteService } from "../services/fileService/fileService.js";
@@ -66,14 +66,26 @@ export const fetchUserById = async (req, res) => {
 
 export const fetchAllUsers = async (req, res) => {
   try {
-    const { search = "", sortBy, role, fromDate, toDate } = req.query;
+    const { search = "", sortBy, role, fromDate, toDate, site, page, limit } = req.query;
     // console.log("reached controller", "role", role)
-    const users = await getAllUsers({ search, sortBy, role, fromDate, toDate });
+    const users = await serveAllUsers({ search, sortBy, role, fromDate, toDate, site, page, limit });
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
+export const getOverViewStats = async (req, res) => {
+
+  try {
+    const stats = await checkOverViewStats()
+    res.status(200).json(stats)
+
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+}
 
 
 export async function uploadUserFile(req, res) {
@@ -111,7 +123,7 @@ export async function uploadFile(req, res) {
     // const fileUrl = `${req.protocol}://${req.get("host")}/api/uploads/${req.file.filename}`;
     // const fileUrl = `/fileUploads/${req.file.filename}`;
 
-//temporary ❌❌❌❌❌❌
+    //temporary ❌❌❌❌❌❌
     const fileUrl = `/fileUploads/${id}/${req.file.filename}`;
 
     const result = await saveFileUrlToUser(fileUrl, fileKey, id);
@@ -266,7 +278,7 @@ export const createEmployee = async (req, res) => {
     if (error.message === "email-already-registered-user") {
       return res.status(400).json({ success: false, message: "This email is already registered" });
     }
-    console.error("Create employee error:", error.message || error,"While registering :",email, "at :", new Date());
+    console.error("Create employee error:", error.message || error, "While registering :", email, "at :", new Date());
     return res.status(500).json({
       success: false,
       message: "Server error — please try again",

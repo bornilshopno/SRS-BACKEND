@@ -10,6 +10,33 @@ import { firebaseAuth } from "../../config/firebaseAdmin.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+
+
+export const initializeUserIndexes = async () => {
+  const usersCollection = await getCollection("users");
+  // Unique email
+  await usersCollection.createIndex(
+    { email: 1 },
+    { unique: true }
+  );
+  // Filtering indexes
+  await usersCollection.createIndex({ site: 1 });
+
+  await usersCollection.createIndex({ role: 1 });
+
+  await usersCollection.createIndex({ driverStatus: 1 });
+
+  await usersCollection.createIndex({ dbsStatus: 1 });
+
+  // Text search
+  await usersCollection.createIndex({
+    firstName: "text",
+    middleName: "text",
+    lastName: "text",
+    email: "text",
+  });
+};
+
 export async function findUserByEmail(email) {
   const userCollection = await getCollection("users");
   return await userCollection.findOne({ email });
@@ -32,7 +59,7 @@ export async function getUserById(id) {
   const userCollection = await getCollection("users");
   const query = { _id: new ObjectId(id) };
   const user = await userCollection.findOne(query);
-  return  {
+  return {
     ...user,
     fullName: [
       user.firstName,
@@ -44,7 +71,7 @@ export async function getUserById(id) {
   };
 }
 
-export async function getAllUsers({ search = "", sortBy, role, fromDate, toDate }) {
+export async function getAllUsers({ search = "", sortBy, role, fromDate, toDate, site, page, limit, }) {
   const userCollection = await getCollection("users");
 
   let query = {
@@ -54,16 +81,20 @@ export async function getAllUsers({ search = "", sortBy, role, fromDate, toDate 
       { lastName: { $regex: search, $options: "i" } },
       { name: { $regex: search, $options: "i" } },
       { email: { $regex: search, $options: "i" } },
-      { phone: { $regex: search, $options: "i" } },
     ]
   };
 
   // Role filter
   if (role) query.role = role;
 
+  // Site filter
+  if (site && site !== "all") {
+    query.site = site;
+  }
+
   // Date range filter for submittedAt field. if field changes then replace it
   if (fromDate && toDate) {
-    query.submitteddAt = {
+    query.submittedAt = {
       $gte: new Date(fromDate),
       $lte: new Date(toDate),
     };
@@ -87,6 +118,83 @@ export async function getAllUsers({ search = "", sortBy, role, fromDate, toDate 
       .filter(Boolean)
       .join(" "), //helps avoid extra spaces if middleName is missing.
   }));
+}
+
+export async function serveAllUsers({
+  search = "",
+  role,
+  site,
+  page = 1,
+  limit,
+}) {
+  const userCollection = await getCollection("users");
+
+  const query = {};
+
+  // Search
+  if (search) {
+    query.$or = [
+      { firstName: { $regex: search, $options: "i" } },
+      { middleName: { $regex: search, $options: "i" } },
+      { lastName: { $regex: search, $options: "i" } },
+      { name: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  // Role filter
+  if (role) {
+    query.role = role;
+  }
+
+  // Site filter
+  if (site && site !== "all") {
+    query.site = site;
+  }
+
+  // Base cursor
+  let cursor = userCollection
+    .find(query)
+    .sort({
+      site: 1,
+      srsDriverNumber: 1,
+    });
+
+  // Apply pagination ONLY if limit exists
+  if (limit) {
+    const skip = (page - 1) * Number(limit);
+
+    cursor = cursor
+      .skip(skip)
+      .limit(Number(limit));
+  }
+
+  const users = await cursor.toArray();
+
+  // Total count
+  const totalUsers = await userCollection.countDocuments(query);
+
+  // Add fullName
+  const formattedUsers = users.map((user) => ({
+    ...user,
+    fullName: [
+      user.firstName,
+      user.middleName,
+      user.lastName,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  }));
+
+  // console.log("search",search,"role", role,  "site", site,"page", page,"limit", limit, "users", formattedUsers.length, "totalUsers",totalUsers)
+
+  return {
+    users: formattedUsers,
+    totalUsers,
+    totalPages: limit
+      ? Math.ceil(totalUsers / limit)
+      : 1,
+  };
 }
 
 
@@ -583,5 +691,96 @@ export const checkAndSendResetMail = async (email) => {
       success: true,
       message: "If eligible, a reset link has been sent.",
     };
+  }
+};
+
+
+export const checkOverViewStats = async () => {
+
+  try {
+
+    const collection = await getCollection("users");
+
+    // Queries
+    const activeQuery = { driverStatus: "Active" };
+    const dbsQuery = {
+      driverStatus: "Active",
+      dbsStatus: {
+        $nin: ["Approved", "Completed"]
+      }
+    };
+
+    // Counts directly from DB
+    const activeDriver = await collection.countDocuments(activeQuery);
+
+    const dbsPending = await collection.countDocuments(dbsQuery);
+
+    // Need actual users array for complex calculations
+    const users = await collection
+      .find(activeQuery)
+      .toArray();
+
+
+    let docExpired = 0;
+
+    const FIFTY_SIX_DAYS =
+      56 * 24 * 60 * 60 * 1000;
+
+    const thresholdTime =
+      Date.now() + FIFTY_SIX_DAYS;
+
+    users.forEach((driver) => {
+
+      // Expiry dates
+      const passportTime =
+        driver.passportExpiry ?? null;
+
+      const dlTime =
+        driver.drivingLicenseExpiry ?? null;
+
+      const rtwTime =
+        driver.rightToWorkExpiry ?? null;
+
+      // Document expired OR expiring within 56 days
+      if (
+        (passportTime &&
+          !isNaN(passportTime) &&
+          passportTime <= thresholdTime) ||
+
+        (dlTime &&
+          !isNaN(dlTime) &&
+          dlTime <= thresholdTime) ||
+
+        (
+          (driver.isUKnational !== true &&
+            driver.rtkNoLimit !== true) &&
+
+          (rtwTime &&
+            !isNaN(rtwTime) &&
+            rtwTime <= thresholdTime)
+        )
+      ) {
+        docExpired++;
+      }
+
+    });
+
+    return {
+      success: true,
+      data: {
+        activeDriver,
+        dbsPending,
+        docExpired,
+      },
+    };
+
+  } catch (error) {
+
+    console.error(
+      "check overview stats:",
+      error.message || error
+    );
+
+    throw error;
   }
 };

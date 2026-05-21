@@ -4,6 +4,7 @@ import admin from "firebase-admin";
 import app from "./index.js";
 import connectDB from "./config/db.js";
 import { initFirebase } from "./config/firebaseAdmin.js";
+import { initializeUserIndexes } from "./app/services/userService.js";
 
 const PORT = process.env.PORT || 5000;
 
@@ -26,6 +27,7 @@ initFirebase(serviceAccount);
 
 try {
   await connectDB();
+  await initializeUserIndexes();
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });

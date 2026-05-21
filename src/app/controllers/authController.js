@@ -40,6 +40,8 @@ export const loginUser = async (req, res) => {
         // (optional) find user in your DB
         const user = await verifyUser(email);
 
+        // console.log("user", user)
+
         if (!user.id || !user.email) {
             return res.status(401).json({ message: "User not found" });
         }
